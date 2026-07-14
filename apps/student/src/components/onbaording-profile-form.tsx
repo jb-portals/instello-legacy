@@ -26,7 +26,7 @@ export function OnboardingProfileForm() {
     <View className="relative gap-3.5">
       <Image
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-        source={require('assets/images/instello.png')}
+        source={require('@/assets/images/instello.png')}
         style={{ width: 130, height: 28, marginBottom: 16 }}
       />
       <Text variant={'h3'} className="text-left">

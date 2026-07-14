@@ -259,7 +259,7 @@ function ChannelDetailsSection() {
         }}
         contentFit="cover"
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-        placeholder={require('assets/images/thumbnail-placeholder.png')}
+        placeholder={require('@/assets/images/thumbnail-placeholder.png')}
       >
         <LinearGradient
           colors={[

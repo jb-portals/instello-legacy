@@ -11,7 +11,7 @@ export default function GetStarted() {
       <Stack.Screen options={{ headerShown: false }} />
       <View className="flex-1 items-center justify-between gap-6 px-6 py-8">
         <Image
-          source={require('assets/images/instello.png')}
+          source={require('@/assets/images/instello.png')}
           style={{ height: 80, width: 140 }}
           contentFit="contain"
           transition={200}
@@ -21,7 +21,7 @@ export default function GetStarted() {
 
         <View className="bg-accent border-border size-32 items-center justify-center rounded-2xl border shadow-lg">
           <Image
-            source={require('assets/images/instello-feather.png')}
+            source={require('@/assets/images/instello-feather.png')}
             style={{ height: 100, width: 100 }}
             contentFit="contain"
             transition={200}

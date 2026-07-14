@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import CouponLoading from 'assets/animations/coupon-loading.json'
 import { Image } from 'expo-image'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import LottieView from 'lottie-react-native'
 import React from 'react'
 import { View } from 'react-native'
+import CouponLoading from '@/assets/animations/coupon-loading.json'
 import { Text } from '@/components/ui/text'
 import { trpc } from '@/utils/api'
 
@@ -43,8 +43,7 @@ export default function ApplyCouponScreen() {
   return (
     <View className="flex-1 items-center justify-between py-20">
       <Image
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-        source={require('assets/images/instello.png')}
+        source={require('@/assets/images/instello.png')}
         style={{ height: 24, width: 110 }}
       />
       <View className="items-center gap-3.5">

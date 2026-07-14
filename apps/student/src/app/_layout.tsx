@@ -1,6 +1,6 @@
 import '../global.css'
 
-import { ClerkProvider, useAuth } from '@clerk/clerk-expo'
+import { ClerkProvider, useAuth, useClerk, useSession } from '@clerk/clerk-expo'
 import { tokenCache } from '@clerk/clerk-expo/token-cache'
 import { ThemeProvider } from '@react-navigation/native'
 import { PortalHost } from '@rn-primitives/portal'
@@ -11,7 +11,6 @@ import * as SplashScreen from 'expo-splash-screen'
 import { StatusBar } from 'expo-status-bar'
 import { PostHogProvider } from 'posthog-react-native'
 import * as React from 'react'
-import type { AppStateStatus } from 'react-native'
 import { AppState, Platform, useColorScheme } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
@@ -69,20 +68,20 @@ void SplashScreen.preventAutoHideAsync()
 
 function Routes() {
   const { isSignedIn, isLoaded } = useAuth()
+  const { session } = useSession()
+  const { setActive } = useClerk()
   const [fontLoaded, error] = useFonts({
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-    MontserratRegular: require('assets/fonts/Montserrat-Regular.ttf'),
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-    MontserratMedium: require('assets/fonts/Montserrat-Medium.ttf'),
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-    MontserratSemiBold: require('assets/fonts/Montserrat-SemiBold.ttf'),
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-    MontserratBold: require('assets/fonts/Montserrat-Bold.ttf'),
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-    MontserratExtraBold: require('assets/fonts/Montserrat-ExtraBold.ttf'),
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-    MontserratBlack: require('assets/fonts/Montserrat-Black.ttf'),
+    MontserratRegular: require('@/assets/fonts/Montserrat-Regular.ttf'),
+    MontserratMedium: require('@/assets/fonts/Montserrat-Medium.ttf'),
+    MontserratSemiBold: require('@/assets/fonts/Montserrat-SemiBold.ttf'),
+    MontserratBold: require('@/assets/fonts/Montserrat-Bold.ttf'),
+    MontserratExtraBold: require('@/assets/fonts/Montserrat-ExtraBold.ttf'),
+    MontserratBlack: require('@/assets/fonts/Montserrat-Black.ttf'),
   })
+
+  const isResolvingOrgTask =
+    session?.status === 'pending' &&
+    session.currentTask?.key === 'choose-organization'
 
   React.useEffect(() => {
     if (isLoaded && fontLoaded) {
@@ -100,7 +99,13 @@ function Routes() {
     return () => subscription.remove()
   }, [])
 
-  if (!isLoaded || error) {
+  // Resolve stuck pending sessions (e.g. after a previous login attempt)
+  const pendingSessionId = isResolvingOrgTask ? session.id : null
+  React.useEffect(() => {
+    if (!isLoaded || !session || !setActive || !pendingSessionId) return
+  }, [isLoaded, session, setActive, pendingSessionId])
+
+  if (!isLoaded || error || isResolvingOrgTask) {
     console.log(error)
     return null
   }
@@ -131,7 +136,7 @@ function Routes() {
       </Stack.Protected>
 
       {/* Screens only shown when the user IS signed in */}
-      <Stack.Protected guard={isSignedIn}>
+      <Stack.Protected guard={!!isSignedIn}>
         <Stack.Screen name="(protected)" options={{ headerShown: false }} />
       </Stack.Protected>
 

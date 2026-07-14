@@ -60,7 +60,7 @@ function ChannelCard({
             }}
             contentFit="cover"
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-            placeholder={require('assets/images/thumbnail-placeholder.png')}
+            placeholder={require('@/assets/images/thumbnail-placeholder.png')}
           />
           <CardContent className="w-full flex-1 gap-0.5 px-0">
             <CardTitle numberOfLines={1}>{channel.title}</CardTitle>

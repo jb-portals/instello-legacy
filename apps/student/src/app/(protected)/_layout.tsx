@@ -34,7 +34,7 @@ export default function ProtectedLayout() {
           <View className="flex-1 items-center justify-center gap-6 p-4">
             <Image
               // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-              source={require('assets/images/instello.png')}
+              source={require('@/assets/images/instello.png')}
               style={{ height: 28, width: 128, aspectRatio: 'auto' }}
             />
             <Card>

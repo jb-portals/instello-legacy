@@ -41,7 +41,7 @@ function SubscribeToChannelForm() {
     trpc.lms.coupon.check.mutationOptions({
       onSuccess(coupon) {
         router.replace(
-          `/(subscribe)/apply-coupon?couponId=${coupon.id}&channelId=${channelId}`,
+          `/(protected)/(subscribe)/apply-coupon?couponId=${coupon.id}&channelId=${channelId}`,
         )
       },
     }),

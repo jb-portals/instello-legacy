@@ -26,7 +26,7 @@ export default function HomeLayout() {
           headerTitle: () => (
             <Image
               // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
-              source={require('assets/images/instello.png')}
+              source={require('@/assets/images/instello.png')}
               style={{ width: 110, height: 24 }}
             />
           ),

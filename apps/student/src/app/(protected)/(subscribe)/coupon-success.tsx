@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
-import CrownJSON from 'assets/animations/shine-crown.json'
 import { format } from 'date-fns'
 import { Image } from 'expo-image'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import LottieView from 'lottie-react-native'
 import { View } from 'react-native'
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated'
+import CrownJSON from '@/assets/animations/shine-crown.json'
 import { Button } from '@/components/ui/button'
 import {
   Card,

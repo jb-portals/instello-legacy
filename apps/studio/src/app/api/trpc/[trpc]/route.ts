@@ -1,6 +1,7 @@
-import { getAuth } from '@clerk/nextjs/server'
+import { auth, getAuth } from '@clerk/nextjs/server'
 import { appRouter, createTRPCContext } from '@instello/api'
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
+import { headers } from 'next/headers'
 import type { NextRequest } from 'next/server'
 
 /**
@@ -27,10 +28,10 @@ const handler = async (req: NextRequest) => {
     endpoint: '/api/trpc',
     router: appRouter,
     req,
-    createContext: () =>
+    createContext: async () =>
       createTRPCContext({
-        auth: getAuth(req),
-        headers: req.headers,
+        auth: await auth(),
+        headers: await headers(),
       }),
     onError({ error, path }) {
       console.error(`>>> tRPC Error on '${path}'`, error)

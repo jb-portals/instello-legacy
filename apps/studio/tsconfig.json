@@ -3,7 +3,6 @@
   "compilerOptions": {
     "lib": ["ES2022", "dom", "dom.iterable", "WebWorker"],
     "jsx": "preserve",
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@instello/ui/*": ["../../packages/ui/src/*"]
@@ -17,12 +16,11 @@
     "allowJs": true
   },
   "include": [
+    "src/**/*",
+    "types/globals.d.ts",
     "next-env.d.ts",
     "next.config.mjs",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    "src"
+    ".next/types/**/*.ts"
   ],
   "exclude": ["node_modules"]
 }
