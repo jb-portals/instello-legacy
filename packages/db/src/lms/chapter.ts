@@ -6,6 +6,7 @@ import { z } from 'zod/v4'
 import { initialColumns } from '../columns.helpers'
 import { lmsPgTable } from '../table.helpers'
 import { channel } from './channel'
+import { studyMaterial } from './study-material'
 import { video } from './video'
 
 export const chapter = lmsPgTable(
@@ -52,6 +53,7 @@ export const UpdateChapterSchema = createUpdateSchema(chapter, {
 
 export const chapterRealations = relations(chapter, ({ many, one }) => ({
   videos: many(video),
+  studyMaterials: many(studyMaterial),
   channel: one(channel, {
     fields: [chapter.channelId],
     references: [channel.id],

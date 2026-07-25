@@ -1,7 +1,7 @@
 import { getAuth } from '@clerk/nextjs/server'
 import { eq } from '@instello/db'
 import { db } from '@instello/db/client'
-import { author, channel, video } from '@instello/db/lms'
+import { author, channel, chapter, video } from '@instello/db/lms'
 import type { FileRouter } from 'uploadthing/next'
 import { createUploadthing } from 'uploadthing/next'
 import { UploadThingError, UTApi, UTFiles } from 'uploadthing/server'
@@ -356,6 +356,44 @@ export const studioFileRouter = {
         uploadedBy: metadata.userId,
         channelId: updatedChannel.id,
         newimageUTFileId: updatedChannel.imageUTFileId,
+      }
+    }),
+
+  studyMaterialFileUploader: f({
+    pdf: {
+      maxFileSize: '32MB',
+      maxFileCount: 10,
+      minFileCount: 1,
+    },
+  })
+    .input(z.object({ chapterId: z.string().min(1, 'Chapter Id is required') }))
+    .middleware(async ({ req, input }) => {
+      const { userId } = getAuth(req)
+
+      if (!userId)
+        throw new UploadThingError({
+          message: 'Unauthorized',
+          code: 'BAD_REQUEST',
+        }) as Error
+
+      const singleChapter = await db.query.chapter.findFirst({
+        where: eq(chapter.id, input.chapterId),
+      })
+
+      if (!singleChapter)
+        throw new UploadThingError({
+          message: 'No chapter found',
+          code: 'INTERNAL_SERVER_ERROR',
+        }) as Error
+
+      return { userId, chapter: singleChapter }
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      return {
+        uploadedBy: metadata.userId,
+        chapterId: metadata.chapter.id,
+        key: file.key,
+        name: file.name,
       }
     }),
 } satisfies FileRouter

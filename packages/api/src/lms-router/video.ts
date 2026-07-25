@@ -1,14 +1,4 @@
-import {
-  and,
-  asc,
-  desc,
-  eq,
-  getTableColumns,
-  gt,
-  gte,
-  inArray,
-  sql,
-} from '@instello/db'
+import { and, asc, eq, getTableColumns, gt, gte } from '@instello/db'
 import {
   CreateVideoSchema,
   channel,

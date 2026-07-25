@@ -16,6 +16,7 @@ import {
 } from '@instello/ui/components/dropdown-menu'
 import {
   DotsThreeOutlineIcon,
+  FilePdfIcon,
   HashIcon,
   PenNibIcon,
   PlusSquareIcon,
@@ -29,7 +30,9 @@ import { useTRPC } from '@/trpc/react'
 import { ChangeVisibilityChapter } from './change-visibility-chapter-dropdown'
 import { DeleteChapterDialog } from './dialogs/delete-chapter-dialog'
 import { EditChapterDialog } from './dialogs/edit-chapter-dialog'
+import { UploadStudyMaterialDialog } from './dialogs/upload-study-material-dialog'
 import { UploadVideoDialog } from './dialogs/upload-video-dialog'
+import { StudyMaterialsList } from './study-materials-list'
 import { VideosList } from './videos-list'
 
 export function ChapterList() {
@@ -95,6 +98,18 @@ export function ChapterList() {
                     <PlusSquareIcon weight="duotone" /> Add video...
                   </DropdownMenuItem>
                 </UploadVideoDialog>
+                <UploadStudyMaterialDialog
+                  chapterName={item.title}
+                  chapterId={item.id}
+                >
+                  <DropdownMenuItem
+                    onSelect={(e) => {
+                      e.preventDefault()
+                    }}
+                  >
+                    <FilePdfIcon weight="duotone" /> Add study material...
+                  </DropdownMenuItem>
+                </UploadStudyMaterialDialog>
                 <EditChapterDialog chapterId={item.id}>
                   <DropdownMenuItem
                     onSelect={(e) => {
@@ -122,7 +137,10 @@ export function ChapterList() {
           <AccordionContent className="px-3.5">
             {/* Only fetch and render when this chapter is open */}
             {openChapter === item.id ? (
-              <VideosList chapterId={item.id} />
+              <>
+                <VideosList chapterId={item.id} />
+                <StudyMaterialsList chapterId={item.id} />
+              </>
             ) : null}
           </AccordionContent>
         </AccordionItem>

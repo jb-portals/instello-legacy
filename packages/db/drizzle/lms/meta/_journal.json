@@ -99,6 +99,13 @@
       "when": 1772077852605,
       "tag": "20260226035052_add_is_preview_to_video",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1784904397300,
+      "tag": "20260724201604_enhance_study_material",
+      "breakpoints": true
     }
   ]
 }
