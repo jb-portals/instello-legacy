@@ -364,6 +364,7 @@ export const studioFileRouter = {
       maxFileSize: '32MB',
       maxFileCount: 10,
       minFileCount: 1,
+      contentDisposition: 'inline',
     },
   })
     .input(z.object({ chapterId: z.string().min(1, 'Chapter Id is required') }))

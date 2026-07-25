@@ -372,4 +372,67 @@ export const studyMaterialRouter = {
         })
       })
     }),
+
+  getPublicById: protectedProcedure
+    .input(z.object({ studyMaterialId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      return ctx.db.transaction(async (tx) => {
+        const material = await tx
+          .select({
+            chapter: getTableColumns(chapter),
+            ...getTableColumns(studyMaterial),
+          })
+          .from(studyMaterial)
+          .innerJoin(
+            chapter,
+            and(
+              eq(studyMaterial.chapterId, chapter.id),
+              eq(chapter.isPublished, true),
+            ),
+          )
+          .where(
+            and(
+              eq(studyMaterial.id, input.studyMaterialId),
+              eq(studyMaterial.isPublished, true),
+            ),
+          )
+          .then((r) => r.at(0))
+
+        if (!material) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Study material not found',
+          })
+        }
+
+        const userSubscription = await tx.query.subscription.findFirst({
+          where: and(
+            eq(subscription.clerkUserId, ctx.auth.userId),
+            eq(subscription.channelId, material.chapter.channelId),
+            gte(subscription.endDate, endOfDay(new Date())),
+          ),
+        })
+
+        const canAccess = !!userSubscription
+
+        const files = canAccess
+          ? await tx.query.studyMaterialFile.findMany({
+              where: eq(
+                studyMaterialFile.studyMaterialId,
+                input.studyMaterialId,
+              ),
+              orderBy: [asc(studyMaterialFile.orderIndex)],
+            })
+          : []
+
+        const { chapter: materialChapter, ...rest } = material
+
+        return withEditFlags({
+          ...rest,
+          canAccess,
+          channelId: materialChapter.channelId,
+          files,
+        })
+      })
+    }),
 }

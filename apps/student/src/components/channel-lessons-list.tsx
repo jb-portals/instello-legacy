@@ -20,11 +20,11 @@ import {
   CrownIcon,
   LockLaminatedIcon,
 } from 'phosphor-react-native'
-import React, { useCallback, useRef } from 'react'
+import React, { useCallback, useRef, useState } from 'react'
 import {
   ActivityIndicator,
+  Pressable,
   RefreshControl,
-  StyleSheet,
   TouchableOpacity,
   useColorScheme,
   View,
@@ -41,10 +41,75 @@ import { useVideoPrefetch } from '@/hooks/useVideoPrefetch'
 import { THEME } from '@/lib/theme'
 import { formatDuration, formatNumber } from '@/lib/utils'
 import { trpc } from '@/utils/api'
+import { StudyMaterialsList } from './study-materials-list'
 import { Badge } from './ui/badge'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card'
 
+type ContentTab = 'videos' | 'materials'
+
 export function ChannelLessonsList() {
+  const [activeTab, setActiveTab] = useState<ContentTab>('videos')
+
+  const header = (
+    <>
+      <ChannelDetailsSection />
+      <ContentTabs activeTab={activeTab} onChange={setActiveTab} />
+    </>
+  )
+
+  if (activeTab === 'materials') {
+    return <StudyMaterialsList ListHeaderComponent={header} />
+  }
+
+  return <VideosList ListHeaderComponent={header} />
+}
+
+function ContentTabs({
+  activeTab,
+  onChange,
+}: {
+  activeTab: ContentTab
+  onChange: (tab: ContentTab) => void
+}) {
+  return (
+    <View className="mb-3 flex-row border-b border-border px-4">
+      {(
+        [
+          { id: 'videos', label: 'Videos' },
+          { id: 'materials', label: 'Study materials' },
+        ] as const
+      ).map((tab) => {
+        const isActive = activeTab === tab.id
+        return (
+          <Pressable
+            key={tab.id}
+            onPress={() => onChange(tab.id)}
+            className="mr-5 py-3"
+          >
+            <Text
+              className={
+                isActive
+                  ? 'text-foreground text-sm font-semibold'
+                  : 'text-muted-foreground text-sm'
+              }
+            >
+              {tab.label}
+            </Text>
+            {isActive ? (
+              <View className="bg-foreground absolute bottom-0 left-0 right-0 h-0.5 rounded-full" />
+            ) : null}
+          </Pressable>
+        )
+      })}
+    </View>
+  )
+}
+
+function VideosList({
+  ListHeaderComponent,
+}: {
+  ListHeaderComponent: React.ReactElement
+}) {
   const { chapterId } = useLocalSearchParams() as {
     chapterId: string
   }
@@ -60,7 +125,6 @@ export function ChannelLessonsList() {
 
   const { prefetchVideo, prefetchVideos } = useVideoPrefetch()
 
-  // Prefetch all video details when the channel videos are loaded
   React.useEffect(() => {
     if (videos && Array.isArray(videos)) {
       const videoIds = videos
@@ -80,7 +144,7 @@ export function ChannelLessonsList() {
     <FlashList
       data={videos ?? []}
       showsVerticalScrollIndicator={false}
-      ListHeaderComponent={<ChannelDetailsSection />}
+      ListHeaderComponent={ListHeaderComponent}
       refreshControl={
         <RefreshControl
           onRefresh={() => videosQuery.refetch()}

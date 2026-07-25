@@ -212,12 +212,8 @@
           "name": "lms_channel_college_id_lms_college_or_branch_id_fk",
           "tableFrom": "lms_channel",
           "tableTo": "lms_college_or_branch",
-          "columnsFrom": [
-            "college_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["college_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -225,12 +221,8 @@
           "name": "lms_channel_branch_id_lms_college_or_branch_id_fk",
           "tableFrom": "lms_channel",
           "tableTo": "lms_college_or_branch",
-          "columnsFrom": [
-            "branch_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["branch_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -342,12 +334,8 @@
           "name": "lms_chapter_channel_id_lms_channel_id_fk",
           "tableFrom": "lms_chapter",
           "tableTo": "lms_channel",
-          "columnsFrom": [
-            "channel_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["channel_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -428,12 +416,8 @@
           "name": "lms_college_or_branch_college_id_lms_college_or_branch_id_fk",
           "tableFrom": "lms_college_or_branch",
           "tableTo": "lms_college_or_branch",
-          "columnsFrom": [
-            "college_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["college_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -517,12 +501,8 @@
           "name": "lms_coupon_channel_id_lms_channel_id_fk",
           "tableFrom": "lms_coupon",
           "tableTo": "lms_channel",
-          "columnsFrom": [
-            "channel_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["channel_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -575,12 +555,8 @@
           "name": "lms_coupon_redemption_coupon_id_lms_coupon_id_fk",
           "tableFrom": "lms_coupon_redemption",
           "tableTo": "lms_coupon",
-          "columnsFrom": [
-            "coupon_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["coupon_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -655,12 +631,8 @@
           "name": "lms_coupon_target_coupon_id_lms_coupon_id_fk",
           "tableFrom": "lms_coupon_target",
           "tableTo": "lms_coupon",
-          "columnsFrom": [
-            "coupon_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["coupon_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -713,12 +685,8 @@
           "name": "lms_preference_college_id_lms_college_or_branch_id_fk",
           "tableFrom": "lms_preference",
           "tableTo": "lms_college_or_branch",
-          "columnsFrom": [
-            "college_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["college_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -726,12 +694,8 @@
           "name": "lms_preference_branch_id_lms_college_or_branch_id_fk",
           "tableFrom": "lms_preference",
           "tableTo": "lms_college_or_branch",
-          "columnsFrom": [
-            "branch_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["branch_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -842,12 +806,8 @@
           "name": "lms_subscription_channel_id_lms_channel_id_fk",
           "tableFrom": "lms_subscription",
           "tableTo": "lms_channel",
-          "columnsFrom": [
-            "channel_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["channel_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1036,12 +996,8 @@
           "name": "lms_video_chapter_id_lms_chapter_id_fk",
           "tableFrom": "lms_video",
           "tableTo": "lms_chapter",
-          "columnsFrom": [
-            "chapter_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["chapter_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1049,12 +1005,8 @@
           "name": "lms_video_author_id_lms_author_id_fk",
           "tableFrom": "lms_video",
           "tableTo": "lms_author",
-          "columnsFrom": [
-            "author_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["author_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1163,12 +1115,8 @@
           "name": "lms_study_material_chapter_id_lms_chapter_id_fk",
           "tableFrom": "lms_study_material",
           "tableTo": "lms_chapter",
-          "columnsFrom": [
-            "chapter_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["chapter_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1265,12 +1213,8 @@
           "name": "lms_study_material_file_study_material_id_lms_study_material_id_fk",
           "tableFrom": "lms_study_material_file",
           "tableTo": "lms_study_material",
-          "columnsFrom": [
-            "study_material_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["study_material_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

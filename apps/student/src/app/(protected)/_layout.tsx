@@ -172,6 +172,13 @@ export default function ProtectedLayout() {
                   gestureDirection: 'vertical',
                 }}
               />
+              <Stack.Screen
+                name="study-material"
+                options={{
+                  title: 'Study material',
+                  headerShadowVisible: false,
+                }}
+              />
             </Stack.Protected>
           </Stack>
         )}

@@ -25,6 +25,7 @@
     "@mux/mux-uploader-react": "^1.2.0",
     "@mux/upchunk": "^3.5.0",
     "@phosphor-icons/react": "catalog:",
+    "@t3-oss/env-nextjs": "^0.13.11",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-table": "catalog:",
     "@trpc/client": "catalog:",
