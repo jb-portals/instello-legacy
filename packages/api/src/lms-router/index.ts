@@ -1,5 +1,6 @@
 export { authorRouter as author } from './author'
 export { channelRouter as channel } from './channel'
+export { channelTest } from './channel-test'
 export { chapterRouter as chapter } from './chapter'
 export { collegeOrBranchRouter as collegeOrBranch } from './college-or-branch'
 export { couponRouter as coupon } from './coupon'
