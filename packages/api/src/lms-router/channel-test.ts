@@ -106,6 +106,58 @@ function toAttemptPayload(
   }
 }
 
+const questionOptionsInput = z
+  .array(
+    z.object({
+      label: z.string().min(1),
+      isCorrect: z.boolean(),
+    }),
+  )
+  .min(2, 'Add at least two options')
+
+function assertHasCorrectOption(options: { isCorrect: boolean }[]) {
+  if (!options.find((opt) => opt.isCorrect))
+    throw new TRPCError({
+      message: 'At least one option must be correct',
+      code: 'BAD_REQUEST',
+    })
+}
+
+async function getOwnedQuestion(
+  db: DbClient,
+  questionId: string,
+  userId: string,
+  action: 'update' | 'remove',
+) {
+  const question = await db.query.channelTestQuestions.findFirst({
+    where: (fields, { eq }) => eq(fields.id, questionId),
+    with: { channelTest: true },
+  })
+
+  if (!question)
+    throw new TRPCError({
+      message: 'Question not found',
+      code: 'NOT_FOUND',
+    })
+
+  if (!question.channelTest)
+    throw new TRPCError({
+      message: 'Channel test not found',
+      code: 'NOT_FOUND',
+    })
+
+  if (question.channelTest.createdBy !== userId)
+    throw new TRPCError({
+      message:
+        action === 'update'
+          ? 'You are not authorized to update this question'
+          : 'You are not authorized to remove this question',
+      code: 'FORBIDDEN',
+    })
+
+  return question
+}
+
 export const channelTest = {
   /** Create test under channel */
   create: protectedProcedure
@@ -273,22 +325,13 @@ export const channelTest = {
       z.object({
         title: z.string(),
         channelTestId: z.string(),
-        options: z.array(
-          z.object({
-            label: z.string(),
-            isCorrect: z.boolean(),
-          }),
-        ),
+        options: questionOptionsInput,
       }),
     )
     .mutation(async ({ ctx, input }) => {
       return await ctx.db.transaction(async (tx) => {
-        // 1. Atlease one option must be correct
-        if (!input.options.find((opt) => opt.isCorrect))
-          throw new TRPCError({
-            message: 'At least one option must be correct',
-            code: 'BAD_REQUEST',
-          })
+        // 1. At least one option must be correct
+        assertHasCorrectOption(input.options)
 
         // 2. Channel test must exist
         const test = await tx.query.channelTests.findFirst({
@@ -359,6 +402,74 @@ export const channelTest = {
 
         return question
       })
+    }),
+
+  /** Update a question and replace its options */
+  updateQuestion: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        title: z.string().min(1),
+        options: questionOptionsInput,
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      return await ctx.db.transaction(async (tx) => {
+        assertHasCorrectOption(input.options)
+
+        const question = await getOwnedQuestion(
+          tx,
+          input.id,
+          ctx.auth.userId,
+          'update',
+        )
+
+        const updated = await tx
+          .update(channelTestQuestions)
+          .set({ title: input.title })
+          .where(eq(channelTestQuestions.id, question.id))
+          .returning({ id: channelTestQuestions.id })
+          .then((rows) => rows[0])
+
+        if (!updated)
+          throw new TRPCError({
+            message: 'Failed to update question',
+            code: 'INTERNAL_SERVER_ERROR',
+          })
+
+        await tx
+          .delete(channelTestOptions)
+          .where(eq(channelTestOptions.channelTestQuestionId, question.id))
+
+        await tx.insert(channelTestOptions).values(
+          input.options.map(
+            (option, index): typeof channelTestOptions.$inferInsert => ({
+              channelTestQuestionId: question.id,
+              label: option.label,
+              isCorrect: option.isCorrect,
+              orderIdx: index,
+            }),
+          ),
+        )
+
+        return updated
+      })
+    }),
+
+  /** Remove a question and its options */
+  removeQuestion: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const question = await getOwnedQuestion(
+        ctx.db,
+        input.id,
+        ctx.auth.userId,
+        'remove',
+      )
+
+      await ctx.db
+        .delete(channelTestQuestions)
+        .where(eq(channelTestQuestions.id, question.id))
     }),
 
   /** List published tests for students */

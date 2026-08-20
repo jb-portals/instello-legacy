@@ -6,6 +6,7 @@ import { Card, CardContent } from '@instello/ui/components/card'
 import { CheckCircleIcon, ExamIcon, PlusIcon } from '@phosphor-icons/react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
+import { ChannelTestQuestionContextMenu } from '@/components/channel-test-question-context-menu'
 import { AddChannelTestQuestionDialog } from '@/components/dialogs/add-channel-test-question-dialog'
 import { useTRPC } from '@/trpc/react'
 
@@ -50,8 +51,11 @@ export function ChannelTestQuestions() {
           {questions.map((question, index) => (
             <Card key={question.id} className="border-0 bg-accent">
               <CardContent className="space-y-3 pt-6">
-                <div className="text-sm font-semibold">
-                  {index + 1}. {question.title}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="text-sm font-semibold">
+                    {index + 1}. {question.title}
+                  </div>
+                  <ChannelTestQuestionContextMenu question={question} />
                 </div>
                 <div className="space-y-2">
                   {question.channelTestOptions.map((option) => (

@@ -1,6 +1,7 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
+import type { RouterOutputs } from '@instello/api'
 import { Button } from '@instello/ui/components/button'
 import {
   Dialog,
@@ -32,7 +33,7 @@ import { toast } from 'sonner'
 import { z } from 'zod/v4'
 import { useTRPC } from '@/trpc/react'
 
-const AddQuestionSchema = z
+const QuestionSchema = z
   .object({
     title: z.string().min(1, 'Required'),
     options: z
@@ -56,24 +57,44 @@ const AddQuestionSchema = z
     }
   })
 
-export function AddChannelTestQuestionDialog({
+type ChannelTestQuestion =
+  RouterOutputs['lms']['channelTest']['getById']['channelTestQuestions'][number]
+
+const emptyDefaults = {
+  title: '',
+  options: [
+    { label: '', isCorrect: false },
+    { label: '', isCorrect: false },
+    { label: '', isCorrect: false },
+    { label: '', isCorrect: false },
+  ],
+}
+
+function valuesFromQuestion(question?: ChannelTestQuestion) {
+  if (!question) return emptyDefaults
+
+  return {
+    title: question.title,
+    options: question.channelTestOptions.map((option) => ({
+      label: option.label,
+      isCorrect: option.isCorrect,
+    })),
+  }
+}
+
+export function ChannelTestQuestionDialog({
   children,
+  question,
 }: {
   children: React.ReactNode
+  question?: ChannelTestQuestion
 }) {
   const [open, setOpen] = useState(false)
   const { testId } = useParams<{ testId: string }>()
+  const isEditing = !!question
   const form = useForm({
-    resolver: zodResolver(AddQuestionSchema),
-    defaultValues: {
-      title: '',
-      options: [
-        { label: '', isCorrect: false },
-        { label: '', isCorrect: false },
-        { label: '', isCorrect: false },
-        { label: '', isCorrect: false },
-      ],
-    },
+    resolver: zodResolver(QuestionSchema),
+    defaultValues: valuesFromQuestion(question),
   })
 
   const { fields, append, remove } = useFieldArray({
@@ -84,15 +105,19 @@ export function AddChannelTestQuestionDialog({
   const trpc = useTRPC()
   const queryClient = useQueryClient()
 
+  async function afterSave(message: string) {
+    await queryClient.invalidateQueries(
+      trpc.lms.channelTest.getById.queryOptions({ id: testId }),
+    )
+    setOpen(false)
+    form.reset(valuesFromQuestion(question))
+    toast.success(message)
+  }
+
   const { mutateAsync: addQuestion } = useMutation(
     trpc.lms.channelTest.addQuestion.mutationOptions({
       async onSuccess() {
-        await queryClient.invalidateQueries(
-          trpc.lms.channelTest.getById.queryOptions({ id: testId }),
-        )
-        setOpen(false)
-        form.reset()
-        toast.success('Question added')
+        await afterSave('Question added')
       },
       onError(error) {
         toast.error(error.message)
@@ -100,7 +125,27 @@ export function AddChannelTestQuestionDialog({
     }),
   )
 
-  async function onSubmit(values: z.infer<typeof AddQuestionSchema>) {
+  const { mutateAsync: updateQuestion } = useMutation(
+    trpc.lms.channelTest.updateQuestion.mutationOptions({
+      async onSuccess() {
+        await afterSave('Question updated')
+      },
+      onError(error) {
+        toast.error(error.message)
+      },
+    }),
+  )
+
+  async function onSubmit(values: z.infer<typeof QuestionSchema>) {
+    if (question) {
+      await updateQuestion({
+        id: question.id,
+        title: values.title,
+        options: values.options,
+      })
+      return
+    }
+
     await addQuestion({
       channelTestId: testId,
       title: values.title,
@@ -109,11 +154,19 @@ export function AddChannelTestQuestionDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next)
+        if (next) form.reset(valuesFromQuestion(question))
+      }}
+    >
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-base">Add question</DialogTitle>
+          <DialogTitle className="text-base">
+            {isEditing ? 'Edit question' : 'Add question'}
+          </DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -202,7 +255,7 @@ export function AddChannelTestQuestionDialog({
             </DialogBody>
             <DialogFooter>
               <Button loading={form.formState.isSubmitting}>
-                Add question
+                {isEditing ? 'Save question' : 'Add question'}
               </Button>
             </DialogFooter>
           </form>
@@ -211,3 +264,5 @@ export function AddChannelTestQuestionDialog({
     </Dialog>
   )
 }
+
+export { ChannelTestQuestionDialog as AddChannelTestQuestionDialog }

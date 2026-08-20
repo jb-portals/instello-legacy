@@ -13,38 +13,35 @@ import {
 import { Button } from '@instello/ui/components/button'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
-import { useRouter } from 'nextjs-toploader/app'
 import React from 'react'
 import { toast } from 'sonner'
 import { useTRPC } from '@/trpc/react'
 
-export function DeleteChannelTestDialog({
+export function DeleteChannelTestQuestionDialog({
   children,
-  testId,
+  questionId,
   title,
 }: {
   children: React.ReactNode
-  testId: string
+  questionId: string
   title: string
 }) {
   const [open, setOpen] = React.useState(false)
   const trpc = useTRPC()
   const queryClient = useQueryClient()
-  const { channelId } = useParams<{ channelId: string }>()
-  const router = useRouter()
-  const { mutate: deleteChannelTest, isPending } = useMutation(
-    trpc.lms.channelTest.remove.mutationOptions({
+  const { testId } = useParams<{ testId: string }>()
+  const { mutate: deleteQuestion, isPending } = useMutation(
+    trpc.lms.channelTest.removeQuestion.mutationOptions({
       async onSuccess() {
         toast.info(
           <span>
-            Test <b>{title}</b> deleted
+            Question <b>{title}</b> deleted
           </span>,
         )
         await queryClient.invalidateQueries(
-          trpc.lms.channelTest.listChannel.queryOptions({ channelId }),
+          trpc.lms.channelTest.getById.queryOptions({ id: testId }),
         )
         setOpen(false)
-        router.replace(`/c/${channelId}/tests`)
       },
       onError(error) {
         toast.error(error.message)
@@ -57,10 +54,10 @@ export function DeleteChannelTestDialog({
       <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete test permanently</AlertDialogTitle>
+          <AlertDialogTitle>Delete question permanently</AlertDialogTitle>
           <AlertDialogDescription>
-            Deleting this test will remove its questions and student attempts.
-            This action can not be undone.
+            Deleting this question will remove its options and any student
+            answers for it. This action can not be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -69,7 +66,7 @@ export function DeleteChannelTestDialog({
           </AlertDialogCancel>
           <Button
             loading={isPending}
-            onClick={() => deleteChannelTest({ id: testId })}
+            onClick={() => deleteQuestion({ id: questionId })}
             variant={'destructive'}
           >
             Delete Forever

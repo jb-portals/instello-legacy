@@ -39,6 +39,7 @@ import {
   ChannelTestEntryWindowField,
   channelTestEntryWindowSchema,
 } from '@/components/channel-test-entry-window-field'
+import { DeleteChannelTestDialog } from '@/components/dialogs/delete-channel-test-dialog'
 import { useTRPC } from '@/trpc/react'
 
 const ChannelTestFormSchema = z.object({
@@ -50,10 +51,7 @@ const ChannelTestFormSchema = z.object({
   type: z.enum(['open', 'scheduled']),
   isPublished: z.boolean(),
   valid: channelTestEntryWindowSchema,
-  durationMinutes: z
-    .number()
-    .int()
-    .min(1, 'Duration must be at least 1 minute'),
+  durationMinutes: z.int().min(1, 'Duration must be at least 1 minute'),
 })
 
 export function ChannelTestForm() {
@@ -153,6 +151,16 @@ export function ChannelTestForm() {
           </h3>
 
           <div className="space-x-3">
+            <DeleteChannelTestDialog testId={testId} title={data.title}>
+              <Button
+                type="button"
+                variant="destructive"
+                className="rounded-full"
+                size={'lg'}
+              >
+                Delete
+              </Button>
+            </DeleteChannelTestDialog>
             <Button
               disabled={!form.formState.isDirty || form.formState.isSubmitting}
               variant={'secondary'}
