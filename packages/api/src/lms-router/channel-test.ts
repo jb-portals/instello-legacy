@@ -1,4 +1,4 @@
-import { and, eq, gte, inArray } from '@instello/db'
+import { and, eq, gte, inArray, max, ne } from '@instello/db'
 import {
   CreateChannelTestSchema,
   channelTestAttemptAnswers,
@@ -310,16 +310,23 @@ export const channelTest = {
           })
 
         // 4. Get next order index
-        const nextOrderIdx = await tx.query.channelTestQuestions
-          .findFirst({
-            extras: ({ orderIdx }, { sql }) => ({
-              maxOrderIdx: sql`MAX(${orderIdx})`
+        const nextOrderIdx =
+          (await tx
+            .select({
+              maxOrderIdx: max(channelTestQuestions.orderIdx)
                 .mapWith(Number)
                 .as('maxOrderIdx'),
-            }),
-            where: (fields, { eq }) => eq(fields.channelTestId, test.id),
+            })
+            .from(channelTestQuestions)
+            .where(eq(channelTestQuestions.channelTestId, test.id))
+            .groupBy(channelTestQuestions.channelTestId)
+            .then((res) => res.at(0)?.maxOrderIdx ?? -1)) + 1
+
+        if (nextOrderIdx === -1)
+          throw new TRPCError({
+            message: 'Failed to get next order index',
+            code: 'INTERNAL_SERVER_ERROR',
           })
-          .then((res) => res?.maxOrderIdx ?? 0)
 
         // 5. Add question
         const question = await tx
