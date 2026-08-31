@@ -142,7 +142,6 @@ export default function ProtectedLayout() {
                   },
                 }}
               />
-              <Stack.Screen name="channel" options={{ headerShown: false }} />
               <Stack.Screen
                 name="(subscribe)/index"
                 options={{

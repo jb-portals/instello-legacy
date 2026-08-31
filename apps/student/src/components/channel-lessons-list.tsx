@@ -47,69 +47,65 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card'
 
 type ContentTab = 'videos' | 'materials'
 
-export function ChannelLessonsList() {
-  const [activeTab, setActiveTab] = useState<ContentTab>('videos')
+// export function ChannelLessonsList() {
+//   const [activeTab, setActiveTab] = useState<ContentTab>('videos')
+//
+//   const header = (
+//     <>
+//       <ChannelDetailsSection />
+//       <ContentTabs activeTab={activeTab} onChange={setActiveTab} />
+//     </>
+//   )
+//
+//   if (activeTab === 'materials') {
+//     return <StudyMaterialsList ListHeaderComponent={header} />
+//   }
+//
+//   return <VideosList ListHeaderComponent={header} />
+// }
 
-  const header = (
-    <>
-      <ChannelDetailsSection />
-      <ContentTabs activeTab={activeTab} onChange={setActiveTab} />
-    </>
-  )
+// function ContentTabs({
+//   activeTab,
+//   onChange,
+// }: {
+//   activeTab: ContentTab
+//   onChange: (tab: ContentTab) => void
+// }) {
+//   return (
+//     <View className="mb-3 flex-row border-b border-border px-4">
+//       {(
+//         [
+//           { id: 'videos', label: 'Videos' },
+//           { id: 'materials', label: 'Study materials' },
+//         ] as const
+//       ).map((tab) => {
+//         const isActive = activeTab === tab.id
+//         return (
+//           <Pressable
+//             key={tab.id}
+//             onPress={() => onChange(tab.id)}
+//             className="mr-5 py-3"
+//           >
+//             <Text
+//               className={
+//                 isActive
+//                   ? 'text-foreground text-sm font-semibold'
+//                   : 'text-muted-foreground text-sm'
+//               }
+//             >
+//               {tab.label}
+//             </Text>
+//             {isActive ? (
+//               <View className="bg-foreground absolute bottom-0 left-0 right-0 h-0.5 rounded-full" />
+//             ) : null}
+//           </Pressable>
+//         )
+//       })}
+//     </View>
+//   )
+// }
 
-  if (activeTab === 'materials') {
-    return <StudyMaterialsList ListHeaderComponent={header} />
-  }
-
-  return <VideosList ListHeaderComponent={header} />
-}
-
-function ContentTabs({
-  activeTab,
-  onChange,
-}: {
-  activeTab: ContentTab
-  onChange: (tab: ContentTab) => void
-}) {
-  return (
-    <View className="mb-3 flex-row border-b border-border px-4">
-      {(
-        [
-          { id: 'videos', label: 'Videos' },
-          { id: 'materials', label: 'Study materials' },
-        ] as const
-      ).map((tab) => {
-        const isActive = activeTab === tab.id
-        return (
-          <Pressable
-            key={tab.id}
-            onPress={() => onChange(tab.id)}
-            className="mr-5 py-3"
-          >
-            <Text
-              className={
-                isActive
-                  ? 'text-foreground text-sm font-semibold'
-                  : 'text-muted-foreground text-sm'
-              }
-            >
-              {tab.label}
-            </Text>
-            {isActive ? (
-              <View className="bg-foreground absolute bottom-0 left-0 right-0 h-0.5 rounded-full" />
-            ) : null}
-          </Pressable>
-        )
-      })}
-    </View>
-  )
-}
-
-function VideosList({
-  ListHeaderComponent,
-}: {
-  ListHeaderComponent: React.ReactElement
-}) {
+export function VideosList() {
   const { chapterId } = useLocalSearchParams() as {
     chapterId: string
   }
@@ -144,7 +140,7 @@ function VideosList({
     <FlashList
       data={videos ?? []}
       showsVerticalScrollIndicator={false}
-      ListHeaderComponent={ListHeaderComponent}
+      // ListHeaderComponent={ListHeaderComponent}
       refreshControl={
         <RefreshControl
           onRefresh={() => videosQuery.refetch()}
@@ -289,7 +285,7 @@ function VideosList({
   )
 }
 
-function ChannelDetailsSection() {
+export function ChannelDetailsSection() {
   const { channelId } = useLocalSearchParams() as {
     channelId: string
   }
