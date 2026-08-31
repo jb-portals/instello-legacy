@@ -1,13 +1,13 @@
+import { Stack, withLayoutContext } from 'expo-router'
 import {
   createMaterialTopTabNavigator,
   type MaterialTopTabNavigationEventMap,
   type MaterialTopTabNavigationOptions,
-} from '@react-navigation/material-top-tabs'
+} from 'expo-router/js-top-tabs'
 import type {
   ParamListBase,
   TabNavigationState,
-} from '@react-navigation/native'
-import { Stack, withLayoutContext } from 'expo-router'
+} from 'expo-router/react-navigation'
 import { View } from 'react-native'
 import { ChannelDetailsSection } from '@/components/channel-lessons-list'
 

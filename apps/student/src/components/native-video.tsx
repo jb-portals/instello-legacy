@@ -11,10 +11,10 @@ import muxReactNativeVideo from '@mux/mux-data-react-native-video'
 import Slider from '@react-native-community/slider'
 import { FlashList } from '@shopify/flash-list'
 import { useEvent } from 'expo'
-import * as NavigationBar from 'expo-navigation-bar'
+import { NavigationBar } from 'expo-navigation-bar'
 import { router } from 'expo-router'
 import * as ScreenOrientation from 'expo-screen-orientation'
-import { setStatusBarHidden } from 'expo-status-bar'
+import { StatusBar } from 'expo-status-bar'
 import type {
   VideoContentFit,
   VideoMetadata,
@@ -156,6 +156,8 @@ NativeVideo.Player = ({
   )
 }
 
+type Timeout = ReturnType<typeof setTimeout>
+
 function NativeVideoControlsOverlay({
   player,
   fullscreen,
@@ -173,7 +175,7 @@ function NativeVideoControlsOverlay({
   const [sliding, setSliding] = React.useState(false)
   const [slidingTime, setSlidingTime] = React.useState(player.currentTime)
   const [showControls, setShowControls] = React.useState(true)
-  const controlsTimeout = React.useRef<NodeJS.Timeout>(null)
+  const controlsTimeout = React.useRef<Timeout>(null)
 
   const startTimeToHideControls = useCallback(() => {
     // Clear any existing timeout before setting a new one
@@ -184,7 +186,7 @@ function NativeVideoControlsOverlay({
     controlsTimeout.current = setTimeout(() => {
       setShowControls(false)
       controlsTimeout.current = null // Reset the timeout reference
-    }, 5000) as unknown as NodeJS.Timeout
+    }, 5000) as unknown as Timeout
   }, [])
 
   const stopTimeToHideControls = useCallback(() => {
@@ -199,8 +201,8 @@ function NativeVideoControlsOverlay({
       ScreenOrientation.OrientationLock.LANDSCAPE,
     )
     onChangeFullScreen(true)
-    setStatusBarHidden(true, 'slide')
-    await NavigationBar.setVisibilityAsync('hidden')
+    StatusBar.setHidden(true, 'slide')
+    NavigationBar.setHidden(true)
   }, [onChangeFullScreen])
 
   const exitFullscreen = useCallback(async () => {
@@ -208,8 +210,8 @@ function NativeVideoControlsOverlay({
       ScreenOrientation.OrientationLock.PORTRAIT_UP,
     )
     onChangeFullScreen(false)
-    setStatusBarHidden(false, 'slide')
-    await NavigationBar.setVisibilityAsync('visible')
+    StatusBar.setHidden(true, 'slide')
+    NavigationBar.setHidden(false)
   }, [onChangeFullScreen])
 
   const toggleShowControls = () => {

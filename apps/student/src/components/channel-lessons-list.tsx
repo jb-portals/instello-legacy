@@ -109,6 +109,11 @@ export function VideosList() {
   const { chapterId } = useLocalSearchParams() as {
     chapterId: string
   }
+  const { channelId } = useLocalSearchParams() as {
+    channelId: string
+  }
+  const { chaptersQuery } = useChannelScreenData(channelId)
+
   const videosQuery = useInfiniteQuery(
     trpc.lms.video.listPublicByChapterId.infiniteQueryOptions(
       { chapterId },
@@ -140,7 +145,11 @@ export function VideosList() {
     <FlashList
       data={videos ?? []}
       showsVerticalScrollIndicator={false}
-      // ListHeaderComponent={ListHeaderComponent}
+      ListHeaderComponent={
+        <View className="px-4 py-3">
+          <ChapterButton chaptersQuery={chaptersQuery} />
+        </View>
+      }
       refreshControl={
         <RefreshControl
           onRefresh={() => videosQuery.refetch()}
@@ -289,8 +298,7 @@ export function ChannelDetailsSection() {
   const { channelId } = useLocalSearchParams() as {
     channelId: string
   }
-  const { channelQuery, subscriptionQuery, chaptersQuery } =
-    useChannelScreenData(channelId)
+  const { channelQuery, subscriptionQuery } = useChannelScreenData(channelId)
   const router = useRouter()
   const { top } = useSafeAreaInsets()
   const theme = useColorScheme()
@@ -472,7 +480,6 @@ export function ChannelDetailsSection() {
             </View>
             <SubscribeButton subscriptionQuery={subscriptionQuery} />
           </View>
-          <ChapterButton chaptersQuery={chaptersQuery} />
         </View>
       )}
     </>
@@ -538,7 +545,7 @@ function SubscribeButton({
   return <>{renderSubscriptionButotn()}</>
 }
 
-function ChapterButton({
+export function ChapterButton({
   chaptersQuery,
 }: {
   chaptersQuery: ReturnType<typeof useChannelScreenData>['chaptersQuery']
