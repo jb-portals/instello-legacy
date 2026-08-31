@@ -586,16 +586,12 @@ const formatTime = (time: number) => {
 }
 
 const styles = StyleSheet.create({
-  video: {
-    width: 'auto',
-    height: 'auto',
-    aspectRatio: 16 / 9,
-  },
+  video: { width: 'auto', height: 'auto', aspectRatio: 16 / 9 },
   controlsContainer: {
     padding: 10,
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     justifyContent: 'center',
     alignItems: 'center',
   },

@@ -51,7 +51,7 @@ export default function RootLayout() {
             tokenCache={tokenCache}
           >
             <QueryClientProvider client={queryClient}>
-              <ThemeProvider value={NAV_THEME[colorScheme ?? 'light']}>
+              <ThemeProvider value={NAV_THEME.get(colorScheme ?? 'light')}>
                 <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
                 <Routes />
                 <PortalHost />
