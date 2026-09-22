@@ -1,5 +1,5 @@
-import { VideosList } from '@/components/channel-lessons-list'
+import { ChannelTabs } from '@/components/channel-tabs'
 
-export default function ChannelVideosScreen() {
-  return <VideosList />
+export default function ChannelScreen() {
+  return <ChannelTabs />
 }

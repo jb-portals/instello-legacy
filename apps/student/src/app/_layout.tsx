@@ -28,7 +28,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <PostHogProvider
+        {/* <PostHogProvider
           apiKey={process.env.EXPO_PUBLIC_POSTHOG_API_KEY}
           options={{
             disabled: process.env.NODE_ENV !== 'production',
@@ -43,22 +43,22 @@ export default function RootLayout() {
               },
             },
           }}
+        > */}
+        <ClerkProvider
+          polling
+          touchSession
+          publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
+          tokenCache={tokenCache}
         >
-          <ClerkProvider
-            polling
-            touchSession
-            publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
-            tokenCache={tokenCache}
-          >
-            <QueryClientProvider client={queryClient}>
-              <ThemeProvider value={NAV_THEME.get(colorScheme ?? 'light')}>
-                <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-                <Routes />
-                <PortalHost />
-              </ThemeProvider>
-            </QueryClientProvider>
-          </ClerkProvider>
-        </PostHogProvider>
+          <QueryClientProvider client={queryClient}>
+            <ThemeProvider value={NAV_THEME.get(colorScheme ?? 'light')}>
+              <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+              <Routes />
+              <PortalHost />
+            </ThemeProvider>
+          </QueryClientProvider>
+        </ClerkProvider>
+        {/*</PostHogProvider>*/}
       </GestureHandlerRootView>
     </SafeAreaProvider>
   )

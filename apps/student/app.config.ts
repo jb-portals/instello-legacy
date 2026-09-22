@@ -63,6 +63,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       ],
       ['expo-video'],
       [
+        '@mux/mux-react-native-player/plugin',
+        {
+          enablePictureInPicture: true,
+          enableBackgroundAudio: false,
+        },
+      ],
+      [
         'expo-splash-screen',
         {
           backgroundColor: '#FFFFFF',
