@@ -178,6 +178,13 @@ export default function ProtectedLayout() {
                   headerShadowVisible: false,
                 }}
               />
+              <Stack.Screen
+                name="test"
+                options={{
+                  title: 'Test',
+                  headerShadowVisible: false,
+                }}
+              />
             </Stack.Protected>
           </Stack>
         )}

@@ -1,10 +1,10 @@
-import type { ReactElement } from 'react'
 import { useState } from 'react'
-import { Pressable, ScrollView, View } from 'react-native'
+import { Pressable, View } from 'react-native'
 import {
   ChannelDetailsSection,
   VideosList,
 } from '@/components/channel-lessons-list'
+import { ChannelTestsList } from '@/components/channel-tests-list'
 import { StudyMaterialsList } from '@/components/study-materials-list'
 import { Text } from '@/components/ui/text'
 
@@ -37,7 +37,7 @@ export function ChannelTabs() {
   if (tab === 'tests') {
     return (
       <View className="flex-1 bg-background">
-        <TestsPlaceholder ListHeaderComponent={header} />
+        <ChannelTestsList ListHeaderComponent={header} />
       </View>
     )
   }
@@ -85,20 +85,5 @@ function TabBar({
         )
       })}
     </View>
-  )
-}
-
-function TestsPlaceholder({
-  ListHeaderComponent,
-}: {
-  ListHeaderComponent: ReactElement
-}) {
-  return (
-    <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-      {ListHeaderComponent}
-      <View className="items-center justify-center px-4 py-16">
-        <Text>Channel Tests</Text>
-      </View>
-    </ScrollView>
   )
 }
