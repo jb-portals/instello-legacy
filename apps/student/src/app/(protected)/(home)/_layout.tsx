@@ -1,6 +1,6 @@
 import { useUser } from '@clerk/clerk-expo'
 import { Image } from 'expo-image'
-import { Link, Tabs } from 'expo-router'
+import { withLayoutContext, Link, Tabs } from 'expo-router'
 import { HouseIcon } from 'phosphor-react-native'
 import { TouchableOpacity } from 'react-native'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'

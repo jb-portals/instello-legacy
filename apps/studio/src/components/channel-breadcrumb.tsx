@@ -15,6 +15,7 @@ import {
 import {
   ChartLineIcon,
   CrownIcon,
+  ExamIcon,
   GlobeHemisphereEastIcon,
   ListBulletsIcon,
   LockLaminatedIcon,
@@ -30,6 +31,7 @@ const items = [
   { title: 'Analytics', url: '/analytics', icon: ChartLineIcon },
   { title: 'Subscriptions', url: '/subscriptions', icon: CrownIcon },
   { title: 'Coupons', url: '/coupons', icon: TicketIcon },
+  { title: 'Tests', url: '/tests', icon: ExamIcon },
 ]
 
 export function ChannelPageBreadcrumb() {

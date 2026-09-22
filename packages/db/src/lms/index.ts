@@ -1,5 +1,6 @@
 export * from './author'
 export * from './channel'
+export * from './channel-tests'
 export * from './chapter'
 export * from './college-or-branch'
 export * from './coupon'

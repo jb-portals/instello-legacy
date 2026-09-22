@@ -31,6 +31,9 @@ export default function ApplyCouponScreen() {
         await queryClient.invalidateQueries(
           trpc.lms.studyMaterial.listPublicByChapterId.pathFilter(),
         )
+        await queryClient.invalidateQueries(
+          trpc.lms.channelTest.listPublic.pathFilter(),
+        )
         router.replace(`/coupon-success?subscriptionId=${data.id}`)
       },
       onError(error) {

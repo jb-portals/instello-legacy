@@ -16,12 +16,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     icon: './assets/images/icon.png',
     scheme,
     userInterfaceStyle: 'automatic',
-    newArchEnabled: true,
-    splash: {
-      image: './assets/images/splash-icon.png',
-      resizeMode: 'contain',
-      backgroundColor: '#ffffff',
-    },
     assetBundlePatterns: ['**/*'],
     ios: {
       supportsTablet: true,
@@ -31,7 +25,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       url: 'https://u.expo.dev/055c4f68-c31e-41fe-bca2-8f4a15b5af71',
     },
     android: {
-      edgeToEdgeEnabled: true,
       adaptiveIcon: {
         foregroundImage: './assets/images/adaptive-icon.png',
         backgroundColor: '#ffffff',
@@ -59,6 +52,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       'expo-web-browser',
       'expo-secure-store',
       'expo-localization',
+      '@react-native-community/datetimepicker',
+      'expo-image',
+      'expo-status-bar',
       [
         'expo-screen-orientation',
         {
@@ -66,6 +62,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         },
       ],
       ['expo-video'],
+      [
+        '@mux/mux-react-native-player/plugin',
+        {
+          enablePictureInPicture: true,
+          enableBackgroundAudio: false,
+        },
+      ],
       [
         'expo-splash-screen',
         {
