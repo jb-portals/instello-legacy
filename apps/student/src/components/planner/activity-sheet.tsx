@@ -33,6 +33,7 @@ export function ActivitySheet({
   mode,
   date,
   activity,
+  saving = false,
   onDismiss,
   onSave,
 }: {
@@ -40,6 +41,7 @@ export function ActivitySheet({
   mode: 'create' | 'edit' | 'reschedule'
   date: Date
   activity?: Activity
+  saving?: boolean
   onDismiss: () => void
   onSave: (draft: ActivityDraft) => void
 }) {
@@ -213,7 +215,7 @@ export function ActivitySheet({
           ) : null}
         </View>
 
-        <Button disabled={!canSave} onPress={() => onSave(draft)}>
+        <Button disabled={!canSave || saving} onPress={() => onSave(draft)}>
           <Text>{mode === 'reschedule' ? 'Place activity' : 'Save'}</Text>
         </Button>
       </View>

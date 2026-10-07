@@ -1,5 +1,13 @@
+import { useQuery } from '@tanstack/react-query'
 import { Link } from 'expo-router'
-import { ScrollView, TouchableOpacity, View } from 'react-native'
+import {
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  TouchableOpacity,
+  View,
+} from 'react-native'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardDescription,
@@ -7,17 +15,47 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
-import { type Activity, formatUpcoming, type Plan } from '@/lib/planner'
-import { usePlannerStore } from '@/lib/planner-store'
+import { formatUpcoming } from '@/lib/planner'
+import { type RouterOutputs, trpc } from '@/utils/api'
+
+type StudyPlanListItem = RouterOutputs['lms']['studyPlan']['list'][number]
 
 export function PlanList() {
-  const plans = usePlannerStore((state) => state.plans)
-  const activities = usePlannerStore((state) => state.activities)
+  const plansQuery = useQuery(trpc.lms.studyPlan.list.queryOptions())
+  const plans = plansQuery.data ?? []
+
+  if (plansQuery.isPending) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator />
+      </View>
+    )
+  }
+
+  if (plansQuery.isError) {
+    return (
+      <View className="flex-1 items-center justify-center gap-3 px-6">
+        <Text variant="large">Unable to load plans</Text>
+        <Text variant="muted" className="text-center">
+          {plansQuery.error.message}
+        </Text>
+        <Button onPress={() => plansQuery.refetch()}>
+          <Text>Try again</Text>
+        </Button>
+      </View>
+    )
+  }
 
   return (
     <ScrollView
       className="flex-1"
       contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 32 }}
+      refreshControl={
+        <RefreshControl
+          refreshing={plansQuery.isRefetching}
+          onRefresh={() => plansQuery.refetch()}
+        />
+      }
     >
       <Text variant="muted">
         Academic and personal plans in one place. Open a plan to schedule it.
@@ -30,37 +68,21 @@ export function PlanList() {
           </Text>
         </View>
       ) : (
-        plans.map((plan) => (
-          <PlanCard
-            key={plan.id}
-            plan={plan}
-            activities={activities.filter((item) => item.planId === plan.id)}
-          />
-        ))
+        plans.map((plan) => <PlanCard key={plan.id} plan={plan} />)
       )}
     </ScrollView>
   )
 }
 
-function PlanCard({
-  plan,
-  activities,
-}: {
-  plan: Plan
-  activities: Activity[]
-}) {
-  const upcoming = [...activities]
-    .filter(
-      (activity) =>
-        activity.status === 'planned' &&
-        new Date(activity.end).getTime() >= Date.now(),
-    )
-    .sort(
-      (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
-    )[0]
-
+function PlanCard({ plan }: { plan: StudyPlanListItem }) {
   const countLabel =
-    activities.length === 1 ? '1 activity' : `${activities.length} activities`
+    plan.activityCount === 1 ? '1 activity' : `${plan.activityCount} activities`
+  const upcoming = plan.nextActivity
+    ? {
+        title: plan.nextActivity.title,
+        start: plan.nextActivity.startsAt,
+      }
+    : null
 
   return (
     <Link

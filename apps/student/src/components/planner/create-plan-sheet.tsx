@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { View } from 'react-native'
 import { PlannerSheet } from '@/components/planner/planner-sheet'
 import { Button } from '@/components/ui/button'
@@ -8,17 +8,27 @@ import { Text } from '@/components/ui/text'
 
 export function CreatePlanSheet({
   visible,
+  saving = false,
   onDismiss,
   onSubmit,
 }: {
   visible: boolean
+  saving?: boolean
   onDismiss: () => void
   onSubmit: (name: string, note: string) => void
 }) {
   const [name, setName] = useState('')
   const [note, setNote] = useState('')
 
+  useEffect(() => {
+    if (!visible) {
+      setName('')
+      setNote('')
+    }
+  }, [visible])
+
   function handleDismiss() {
+    if (saving) return
     setName('')
     setNote('')
     onDismiss()
@@ -52,12 +62,8 @@ export function CreatePlanSheet({
           />
         </View>
         <Button
-          disabled={name.trim().length === 0}
-          onPress={() => {
-            onSubmit(name, note)
-            setName('')
-            setNote('')
-          }}
+          disabled={name.trim().length === 0 || saving}
+          onPress={() => onSubmit(name.trim(), note.trim())}
         >
           <Text>Create plan</Text>
         </Button>

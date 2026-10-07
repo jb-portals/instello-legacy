@@ -1,3 +1,4 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   addDays,
   addMonths,
@@ -8,12 +9,13 @@ import {
 } from 'date-fns'
 import { CaretLeftIcon, CaretRightIcon, PlusIcon } from 'phosphor-react-native'
 import { useState } from 'react'
-import { Pressable, View } from 'react-native'
+import { ActivityIndicator, Alert, Pressable, View } from 'react-native'
 import { ActivityDetailSheet } from '@/components/planner/activity-detail-sheet'
 import { ActivitySheet } from '@/components/planner/activity-sheet'
 import { DayView } from '@/components/planner/day-view'
 import { MonthView } from '@/components/planner/month-view'
 import { WeekView } from '@/components/planner/week-view'
+import { Button } from '@/components/ui/button'
 import { Icon } from '@/components/ui/icon'
 import { Text } from '@/components/ui/text'
 import {
@@ -21,10 +23,11 @@ import {
   type ActivityDraft,
   type ActivityStatus,
   type CalendarView,
+  toActivity,
   WEEK_STARTS_ON,
 } from '@/lib/planner'
-import { usePlannerStore } from '@/lib/planner-store'
 import { cn } from '@/lib/utils'
+import { trpc } from '@/utils/api'
 
 const VIEWS: { value: CalendarView; label: string }[] = [
   { value: 'day', label: 'Day' },
@@ -37,24 +40,104 @@ type EditorState = {
   activity?: Activity
 } | null
 
-export function PlanCalendar({ planId }: { planId: string }) {
-  const activities = usePlannerStore((state) => state.activities)
-  const createActivity = usePlannerStore((state) => state.createActivity)
-  const updateActivity = usePlannerStore((state) => state.updateActivity)
-  const deleteActivity = usePlannerStore((state) => state.deleteActivity)
-  const setStatus = usePlannerStore((state) => state.setStatus)
-  const rescheduleActivity = usePlannerStore(
-    (state) => state.rescheduleActivity,
-  )
+function activityInput(draft: ActivityDraft) {
+  return {
+    title: draft.title.trim(),
+    kind: draft.kind,
+    startsAt: draft.start,
+    endsAt: draft.end,
+    priority: draft.priority,
+    reminder: draft.reminder,
+    recurrence: draft.recurrence,
+  }
+}
 
-  const planActivities = activities.filter((item) => item.planId === planId)
+export function PlanCalendar({ planId }: { planId: string }) {
+  const queryClient = useQueryClient()
+  const activitiesQuery = useQuery(
+    trpc.lms.studyPlan.activity.list.queryOptions({ planId }),
+  )
+  const planActivities = (activitiesQuery.data ?? []).map(toActivity)
   const [view, setView] = useState<CalendarView>('day')
   const [cursor, setCursor] = useState(() => new Date())
   const [editor, setEditor] = useState<EditorState>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
+  async function refreshActivities() {
+    await Promise.all([
+      queryClient.invalidateQueries(
+        trpc.lms.studyPlan.activity.list.queryFilter({ planId }),
+      ),
+      queryClient.invalidateQueries(trpc.lms.studyPlan.list.pathFilter()),
+    ])
+  }
+
+  const createActivity = useMutation(
+    trpc.lms.studyPlan.activity.create.mutationOptions({
+      async onSuccess(created) {
+        setEditor(null)
+        setCursor(new Date(created.startsAt))
+        await refreshActivities()
+      },
+      onError(error) {
+        Alert.alert('Unable to save activity', error.message)
+      },
+    }),
+  )
+  const updateActivity = useMutation(
+    trpc.lms.studyPlan.activity.update.mutationOptions({
+      async onSuccess(updated) {
+        setEditor(null)
+        setCursor(new Date(updated.startsAt))
+        await refreshActivities()
+      },
+      onError(error) {
+        Alert.alert('Unable to save activity', error.message)
+      },
+    }),
+  )
+  const deleteActivity = useMutation(
+    trpc.lms.studyPlan.activity.delete.mutationOptions({
+      async onSuccess() {
+        setSelectedId(null)
+        await refreshActivities()
+      },
+      onError(error) {
+        Alert.alert('Unable to delete activity', error.message)
+      },
+    }),
+  )
+  const setStatus = useMutation(
+    trpc.lms.studyPlan.activity.setStatus.mutationOptions({
+      async onSuccess() {
+        await refreshActivities()
+      },
+      onError(error) {
+        Alert.alert('Unable to update activity', error.message)
+      },
+    }),
+  )
+  const rescheduleActivity = useMutation(
+    trpc.lms.studyPlan.activity.reschedule.mutationOptions({
+      async onSuccess(created) {
+        setEditor(null)
+        setSelectedId(null)
+        setCursor(new Date(created.startsAt))
+        setView('day')
+        await refreshActivities()
+      },
+      onError(error) {
+        Alert.alert('Unable to reschedule activity', error.message)
+      },
+    }),
+  )
+
   const selected =
     planActivities.find((activity) => activity.id === selectedId) ?? null
+  const saving =
+    createActivity.isPending ||
+    updateActivity.isPending ||
+    rescheduleActivity.isPending
 
   function shift(direction: -1 | 1) {
     setCursor((current) => {
@@ -70,21 +153,18 @@ export function PlanCalendar({ planId }: { planId: string }) {
   }
 
   function handleSave(draft: ActivityDraft) {
-    if (!editor) return
+    if (!editor || saving) return
+    const input = activityInput(draft)
     if (editor.mode === 'create') {
-      const created = createActivity(planId, draft)
-      if (created) setCursor(new Date(created.start))
+      createActivity.mutate({ planId, ...input })
     } else if (editor.mode === 'edit' && editor.activity) {
-      updateActivity(editor.activity.id, draft)
-      setCursor(draft.start)
+      updateActivity.mutate({ activityId: editor.activity.id, ...input })
     } else if (editor.mode === 'reschedule' && editor.activity) {
-      const created = rescheduleActivity(editor.activity.id, draft)
-      if (created) {
-        setCursor(new Date(created.start))
-        setView('day')
-      }
+      rescheduleActivity.mutate({
+        activityId: editor.activity.id,
+        ...input,
+      })
     }
-    setEditor(null)
   }
 
   function markStatus(activity: Activity, status: ActivityStatus) {
@@ -93,7 +173,7 @@ export function PlanCalendar({ planId }: { planId: string }) {
       setEditor({ mode: 'reschedule', activity })
       return
     }
-    setStatus(activity.id, status)
+    setStatus.mutate({ activityId: activity.id, status })
   }
 
   const rangeLabel =
@@ -160,29 +240,41 @@ export function PlanCalendar({ planId }: { planId: string }) {
         </View>
       </View>
 
-      {view === 'day' ? (
+      {activitiesQuery.isPending ? (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator />
+        </View>
+      ) : activitiesQuery.isError ? (
+        <View className="flex-1 items-center justify-center gap-3 px-6">
+          <Text variant="large">Unable to load activities</Text>
+          <Text variant="muted" className="text-center">
+            {activitiesQuery.error.message}
+          </Text>
+          <Button onPress={() => activitiesQuery.refetch()}>
+            <Text>Try again</Text>
+          </Button>
+        </View>
+      ) : view === 'day' ? (
         <DayView
           date={cursor}
           activities={planActivities}
           onOpen={(activity) => setSelectedId(activity.id)}
         />
-      ) : null}
-      {view === 'week' ? (
+      ) : view === 'week' ? (
         <WeekView
           date={cursor}
           activities={planActivities}
           onOpen={(activity) => setSelectedId(activity.id)}
           onFocusDay={focusDay}
         />
-      ) : null}
-      {view === 'month' ? (
+      ) : (
         <MonthView
           date={cursor}
           activities={planActivities}
           onOpen={(activity) => setSelectedId(activity.id)}
           onSelectDay={setCursor}
         />
-      ) : null}
+      )}
 
       <Pressable
         accessibilityRole="button"
@@ -198,6 +290,7 @@ export function PlanCalendar({ planId }: { planId: string }) {
         mode={editor?.mode ?? 'create'}
         date={cursor}
         activity={editor?.activity}
+        saving={saving}
         onDismiss={() => setEditor(null)}
         onSave={handleSave}
       />
@@ -213,8 +306,8 @@ export function PlanCalendar({ planId }: { planId: string }) {
           setEditor({ mode: 'reschedule', activity })
         }}
         onDelete={(activity) => {
-          deleteActivity(activity.id)
-          setSelectedId(null)
+          if (deleteActivity.isPending) return
+          deleteActivity.mutate({ activityId: activity.id })
         }}
         onStatus={markStatus}
       />

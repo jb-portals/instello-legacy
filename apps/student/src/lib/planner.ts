@@ -1,7 +1,6 @@
 import {
   addDays,
   addMinutes,
-  addWeeks,
   differenceInMinutes,
   format,
   isSameDay,
@@ -11,6 +10,8 @@ import {
   setMinutes,
   startOfDay,
 } from 'date-fns'
+
+import type { RouterOutputs } from '@/utils/api'
 
 export type ActivityKind =
   | 'study'
@@ -38,12 +39,6 @@ export type ActivityStatus =
   | 'skipped'
   | 'rescheduled'
 
-export type Plan = {
-  id: string
-  name: string
-  note: string
-}
-
 export type Activity = {
   id: string
   planId: string
@@ -54,7 +49,6 @@ export type Activity = {
   priority: ActivityPriority
   reminder: ActivityReminder
   recurrence: ActivityRecurrence
-  seriesId?: string
   status: ActivityStatus
 }
 
@@ -129,11 +123,22 @@ const STATUS_SHORT: Record<ActivityStatus, string | null> = {
   rescheduled: 'Moved',
 }
 
-let idCounter = 0
+type StudyPlanActivityRow =
+  RouterOutputs['lms']['studyPlan']['activity']['list'][number]
 
-export function createId(prefix: string) {
-  idCounter += 1
-  return `${prefix}_${Date.now().toString(36)}_${idCounter}`
+export function toActivity(row: StudyPlanActivityRow): Activity {
+  return {
+    id: row.id,
+    planId: row.planId,
+    title: row.title,
+    kind: row.kind,
+    start: row.startsAt.toISOString(),
+    end: row.endsAt.toISOString(),
+    priority: row.priority,
+    reminder: row.reminder,
+    recurrence: row.recurrence,
+    status: row.status,
+  }
 }
 
 export function labelFor<T extends string>(
@@ -176,7 +181,9 @@ export function formatTimeRange(start: string | Date, end: string | Date) {
   return `${format(new Date(start), 'h:mm a')} – ${format(new Date(end), 'h:mm a')}`
 }
 
-export function formatUpcoming(activity: Activity | undefined) {
+export function formatUpcoming(
+  activity: { title: string; start: string | Date } | null | undefined,
+) {
   if (!activity) return 'Nothing coming up'
   const start = new Date(activity.start)
   const time = format(start, 'h:mm a')
@@ -223,37 +230,6 @@ export function makeActivityDraft(input: {
     recurrence:
       input.mode === 'reschedule' ? 'none' : input.activity.recurrence,
   }
-}
-
-export function recurrenceOccurrences(
-  start: Date,
-  end: Date,
-  recurrence: ActivityRecurrence,
-) {
-  const duration = Math.max(differenceInMinutes(end, start), 15)
-  const last = addWeeks(start, 8).getTime()
-  const dates: { start: Date; end: Date }[] = []
-  let cursor = start
-
-  while (cursor.getTime() <= last) {
-    const day = cursor.getDay()
-    const isFirst = cursor.getTime() === start.getTime()
-    const matches =
-      recurrence === 'none' ||
-      recurrence === 'daily' ||
-      recurrence === 'weekly' ||
-      (recurrence === 'weekdays' && day !== 0 && day !== 6) ||
-      isFirst
-
-    if (matches) {
-      dates.push({ start: cursor, end: addMinutes(cursor, duration) })
-    }
-
-    if (recurrence === 'none') break
-    cursor = recurrence === 'weekly' ? addWeeks(cursor, 1) : addDays(cursor, 1)
-  }
-
-  return dates
 }
 
 export function blockGeometry(
