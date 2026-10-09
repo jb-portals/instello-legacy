@@ -120,6 +120,13 @@
       "when": 1791350654416,
       "tag": "20261007052414_add_study_plan",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791462534514,
+      "tag": "20261008122854_add_friends_zone",
+      "breakpoints": true
     }
   ]
 }

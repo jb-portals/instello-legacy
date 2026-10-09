@@ -1,7 +1,11 @@
 import { useUser } from '@clerk/clerk-expo'
 import { Image } from 'expo-image'
 import { Link, Tabs } from 'expo-router'
-import { CalendarBlankIcon, HouseIcon } from 'phosphor-react-native'
+import {
+  CalendarBlankIcon,
+  HouseIcon,
+  UsersThreeIcon,
+} from 'phosphor-react-native'
 import { TouchableOpacity } from 'react-native'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Icon } from '@/components/ui/icon'
@@ -55,6 +59,21 @@ export default function HomeLayout() {
                 </Avatar>
               </TouchableOpacity>
             </Link>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="friends"
+        options={{
+          title: 'Friends',
+          headerShown: false,
+          tabBarIcon: ({ size, focused }) => (
+            <Icon
+              as={UsersThreeIcon}
+              size={size}
+              className={cn(focused ? 'text-primary' : 'text-muted-foreground')}
+              weight={focused ? 'fill' : 'duotone'}
+            />
           ),
         }}
       />
