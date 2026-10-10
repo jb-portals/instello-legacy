@@ -6,7 +6,6 @@ import { Link, router, useGlobalSearchParams } from 'expo-router'
 import { BookOpenTextIcon } from 'phosphor-react-native'
 import {
   ActivityIndicator,
-  StyleSheet,
   TouchableOpacity,
   useColorScheme,
   View,
@@ -36,7 +35,7 @@ function ChannelCard({
 
   return (
     <Link
-      href={`/channel?channelId=${channel.id}&chapterId=${channel.firstChapter?.id}`}
+      href={`/(channel)?channelId=${channel.id}&chapterId=${channel.firstChapter?.id}`}
       asChild
     >
       <TouchableOpacity>

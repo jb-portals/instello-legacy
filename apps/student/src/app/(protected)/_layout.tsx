@@ -142,7 +142,6 @@ export default function ProtectedLayout() {
                   },
                 }}
               />
-              <Stack.Screen name="channel" options={{ headerShown: false }} />
               <Stack.Screen
                 name="(subscribe)/index"
                 options={{
@@ -176,6 +175,13 @@ export default function ProtectedLayout() {
                 name="study-material"
                 options={{
                   title: 'Study material',
+                  headerShadowVisible: false,
+                }}
+              />
+              <Stack.Screen
+                name="test"
+                options={{
+                  title: 'Test',
                   headerShadowVisible: false,
                 }}
               />

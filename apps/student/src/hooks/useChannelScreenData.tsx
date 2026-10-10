@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useQueries } from '@tanstack/react-query'
+import { useQueries } from '@tanstack/react-query'
 import { trpc } from '@/utils/api'
 
 export function useChannelScreenData(channelId: string) {

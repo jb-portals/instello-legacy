@@ -4,7 +4,6 @@ import * as Linking from 'expo-linking'
 import { useLocalSearchParams } from 'expo-router'
 import { usePreventScreenCapture } from 'expo-screen-capture'
 import { StatusBar } from 'expo-status-bar'
-import type { VideoSource } from 'expo-video'
 import {
   CalendarIcon,
   CaretDownIcon,
@@ -16,7 +15,7 @@ import { useState } from 'react'
 import { ScrollView, View } from 'react-native'
 import Animated, { FadeInUp, FadeOutUp } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { NativeVideo } from '@/components/native-video'
+import { MuxPlayer } from '@/components/mux-player'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Icon } from '@/components/ui/icon'
@@ -45,42 +44,27 @@ export default function VideoScreen() {
     }),
   )
 
-  const videoSource: VideoSource = {
-    uri: `https://stream.mux.com/${playbackId}.m3u8`,
-    metadata: {
-      title: video?.title,
-      artist: video?.chapter.title,
-    },
-  }
-
   const { top } = useSafeAreaInsets()
 
   return (
     <>
       <StatusBar style="auto" />
-      <NativeVideo style={{ paddingTop: top, flex: 1 }}>
-        <NativeVideo.Player
-          assetId={assetId}
+
+      <ScrollView style={{ flex: 1, paddingTop: top }}>
+        <MuxPlayer
+          playbackId={playbackId}
           videoId={videoId}
-          videoSource={videoSource}
-          channelName={video?.chapter.channel.title ?? 'Unknown Channel'}
+          assetId={assetId}
+          channelName={video?.chapter.channel.title ?? 'Unknown channel'}
+          videoTitle={video?.title ?? 'unknown video'}
         />
-        <NativeVideo.Content className="flex-1">
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            contentContainerClassName="gap-3.5 p-4"
-            keyboardDismissMode="interactive"
-            showsVerticalScrollIndicator={false}
-          >
-            <VideoDetails
-              isLoading={isLoading && !video}
-              isFetching={isFetching}
-              error={error}
-              video={video}
-            />
-          </ScrollView>
-        </NativeVideo.Content>
-      </NativeVideo>
+        <VideoDetails
+          isLoading={isLoading}
+          isFetching={isFetching}
+          error={error}
+          video={video}
+        />
+      </ScrollView>
     </>
   )
 }
@@ -140,7 +124,7 @@ function VideoDetails({
   }
 
   return (
-    <View className="gap-4">
+    <View className="gap-4 py-3 px-3">
       {/* Video Title */}
       <View className="items-start gap-3">
         <View className="bg-muted rounded-full px-2 py-1">
