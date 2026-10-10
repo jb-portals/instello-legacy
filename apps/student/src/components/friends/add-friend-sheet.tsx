@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react'
 import { Alert, View } from 'react-native'
 import { PlannerSheet } from '@/components/planner/planner-sheet'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { SheetInput } from '@/components/ui/sheet-input'
 import { Text } from '@/components/ui/text'
 import { displayName, isLikelyEmail } from '@/lib/friends'
 import { trpc } from '@/utils/api'
@@ -108,7 +108,7 @@ export function AddFriendSheet({
       <View className="gap-4">
         <View className="gap-1.5">
           <Label>Email</Label>
-          <Input
+          <SheetInput
             value={email}
             onChangeText={setEmail}
             placeholder="name@college.edu"

@@ -5,8 +5,8 @@ import { ChoiceChips } from '@/components/planner/choice-chips'
 import { DateTimeField } from '@/components/planner/date-time-field'
 import { PlannerSheet } from '@/components/planner/planner-sheet'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { SheetInput } from '@/components/ui/sheet-input'
 import { Text } from '@/components/ui/text'
 import {
   type Activity,
@@ -106,7 +106,7 @@ export function ActivitySheet({
       <View className="gap-4">
         <View className="gap-1.5">
           <Label>Title</Label>
-          <Input
+          <SheetInput
             value={draft.title}
             onChangeText={(title) =>
               setDraft((current) => ({ ...current, title }))

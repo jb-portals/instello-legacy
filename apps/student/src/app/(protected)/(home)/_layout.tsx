@@ -65,7 +65,7 @@ export default function HomeLayout() {
       <Tabs.Screen
         name="friends"
         options={{
-          title: 'Friends',
+          title: 'Combine Study',
           headerShown: false,
           tabBarIcon: ({ size, focused }) => (
             <Icon

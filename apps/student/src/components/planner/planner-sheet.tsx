@@ -24,21 +24,29 @@ export function PlannerSheet({
   children: ReactNode
 }) {
   const ref = useRef<BottomSheetModal>(null)
-  const presented = useRef(false)
+  const visibleRef = useRef(visible)
   const scheme = useColorScheme()
   const colors = THEME[scheme ?? 'light']
 
   useEffect(() => {
-    if (visible) {
-      presented.current = true
-      ref.current?.present()
+    visibleRef.current = visible
+    if (!visible) {
+      ref.current?.dismiss()
       return
     }
 
-    if (!presented.current) return
-    presented.current = false
-    ref.current?.dismiss()
+    ref.current?.present()
+    // present() is ignored while a previous close is still running.
+    const retry = setTimeout(() => {
+      if (visibleRef.current) ref.current?.present()
+    }, 300)
+    return () => clearTimeout(retry)
   }, [visible])
+
+  const handleDismiss = useCallback(() => {
+    visibleRef.current = false
+    onDismiss()
+  }, [onDismiss])
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
@@ -58,9 +66,9 @@ export function PlannerSheet({
       snapPoints={snapPoints}
       enableDynamicSizing={false}
       enablePanDownToClose
-      onDismiss={onDismiss}
+      onDismiss={handleDismiss}
       backdropComponent={renderBackdrop}
-      keyboardBehavior="interactive"
+      keyboardBehavior="extend"
       keyboardBlurBehavior="restore"
       android_keyboardInputMode="adjustResize"
       backgroundStyle={{

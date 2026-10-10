@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { View } from 'react-native'
 import { PlannerSheet } from '@/components/planner/planner-sheet'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { SheetInput } from '@/components/ui/sheet-input'
 import { Text } from '@/components/ui/text'
 
 export function PlanSheet({
@@ -47,7 +47,7 @@ export function PlanSheet({
       <View className="gap-4">
         <View className="gap-1.5">
           <Label>Name</Label>
-          <Input
+          <SheetInput
             value={name}
             onChangeText={setName}
             placeholder="Spring Boot Study"
@@ -55,7 +55,7 @@ export function PlanSheet({
         </View>
         <View className="gap-1.5">
           <Label>Note</Label>
-          <Input
+          <SheetInput
             value={note}
             onChangeText={setNote}
             placeholder="What this plan covers"

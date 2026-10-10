@@ -3,8 +3,8 @@ import { View } from 'react-native'
 import { ChoiceChips } from '@/components/planner/choice-chips'
 import { PlannerSheet } from '@/components/planner/planner-sheet'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { SheetInput } from '@/components/ui/sheet-input'
 import { Text } from '@/components/ui/text'
 import { displayName } from '@/lib/friends'
 
@@ -70,7 +70,7 @@ export function CreateTaskSheet({
       <View className="gap-4">
         <View className="gap-1.5">
           <Label>Title</Label>
-          <Input
+          <SheetInput
             value={title}
             onChangeText={setTitle}
             placeholder="Read chapter 4"
