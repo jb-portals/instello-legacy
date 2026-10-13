@@ -2,7 +2,6 @@ import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet'
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
-  BottomSheetView,
   useBottomSheetScrollableCreator,
 } from '@gorhom/bottom-sheet'
 import { FlashList } from '@shopify/flash-list'
@@ -20,10 +19,9 @@ import {
   CrownIcon,
   LockLaminatedIcon,
 } from 'phosphor-react-native'
-import React, { useCallback, useRef, useState } from 'react'
+import React, { useCallback, useRef } from 'react'
 import {
   ActivityIndicator,
-  Pressable,
   RefreshControl,
   TouchableOpacity,
   useColorScheme,
@@ -41,78 +39,22 @@ import { useVideoPrefetch } from '@/hooks/useVideoPrefetch'
 import { THEME } from '@/lib/theme'
 import { formatDuration, formatNumber } from '@/lib/utils'
 import { trpc } from '@/utils/api'
-import { StudyMaterialsList } from './study-materials-list'
 import { Badge } from './ui/badge'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card'
 
-type ContentTab = 'videos' | 'materials'
-
-export function ChannelLessonsList() {
-  const [activeTab, setActiveTab] = useState<ContentTab>('videos')
-
-  const header = (
-    <>
-      <ChannelDetailsSection />
-      <ContentTabs activeTab={activeTab} onChange={setActiveTab} />
-    </>
-  )
-
-  if (activeTab === 'materials') {
-    return <StudyMaterialsList ListHeaderComponent={header} />
-  }
-
-  return <VideosList ListHeaderComponent={header} />
-}
-
-function ContentTabs({
-  activeTab,
-  onChange,
-}: {
-  activeTab: ContentTab
-  onChange: (tab: ContentTab) => void
-}) {
-  return (
-    <View className="mb-3 flex-row border-b border-border px-4">
-      {(
-        [
-          { id: 'videos', label: 'Videos' },
-          { id: 'materials', label: 'Study materials' },
-        ] as const
-      ).map((tab) => {
-        const isActive = activeTab === tab.id
-        return (
-          <Pressable
-            key={tab.id}
-            onPress={() => onChange(tab.id)}
-            className="mr-5 py-3"
-          >
-            <Text
-              className={
-                isActive
-                  ? 'text-foreground text-sm font-semibold'
-                  : 'text-muted-foreground text-sm'
-              }
-            >
-              {tab.label}
-            </Text>
-            {isActive ? (
-              <View className="bg-foreground absolute bottom-0 left-0 right-0 h-0.5 rounded-full" />
-            ) : null}
-          </Pressable>
-        )
-      })}
-    </View>
-  )
-}
-
-function VideosList({
+export function VideosList({
   ListHeaderComponent,
 }: {
-  ListHeaderComponent: React.ReactElement
-}) {
+  ListHeaderComponent?: React.ReactElement
+} = {}) {
   const { chapterId } = useLocalSearchParams() as {
     chapterId: string
   }
+  const { channelId } = useLocalSearchParams() as {
+    channelId: string
+  }
+  const { chaptersQuery } = useChannelScreenData(channelId)
+
   const videosQuery = useInfiniteQuery(
     trpc.lms.video.listPublicByChapterId.infiniteQueryOptions(
       { chapterId },
@@ -143,8 +85,16 @@ function VideosList({
   return (
     <FlashList
       data={videos ?? []}
+      style={{ flex: 1 }}
       showsVerticalScrollIndicator={false}
-      ListHeaderComponent={ListHeaderComponent}
+      ListHeaderComponent={
+        <>
+          {ListHeaderComponent}
+          <View className="px-4 py-3">
+            <ChapterButton chaptersQuery={chaptersQuery} />
+          </View>
+        </>
+      }
       refreshControl={
         <RefreshControl
           onRefresh={() => videosQuery.refetch()}
@@ -289,12 +239,11 @@ function VideosList({
   )
 }
 
-function ChannelDetailsSection() {
+export function ChannelDetailsSection() {
   const { channelId } = useLocalSearchParams() as {
     channelId: string
   }
-  const { channelQuery, subscriptionQuery, chaptersQuery } =
-    useChannelScreenData(channelId)
+  const { channelQuery, subscriptionQuery } = useChannelScreenData(channelId)
   const router = useRouter()
   const { top } = useSafeAreaInsets()
   const theme = useColorScheme()
@@ -310,7 +259,7 @@ function ChannelDetailsSection() {
   const thumbnailUri = `https://${process.env.EXPO_PUBLIC_UPLOADTHING_PROJECT_ID}.ufs.sh/f/${channelQuery.data?.thumbneilId}`
 
   return (
-    <>
+    <View className="bg-background">
       <ImageBackground
         source={{
           uri: thumbnailUri,
@@ -476,10 +425,9 @@ function ChannelDetailsSection() {
             </View>
             <SubscribeButton subscriptionQuery={subscriptionQuery} />
           </View>
-          <ChapterButton chaptersQuery={chaptersQuery} />
         </View>
       )}
-    </>
+    </View>
   )
 }
 
@@ -542,7 +490,7 @@ function SubscribeButton({
   return <>{renderSubscriptionButotn()}</>
 }
 
-function ChapterButton({
+export function ChapterButton({
   chaptersQuery,
 }: {
   chaptersQuery: ReturnType<typeof useChannelScreenData>['chaptersQuery']

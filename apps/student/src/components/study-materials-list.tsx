@@ -9,9 +9,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
+import { ChapterButton } from '@/components/channel-lessons-list'
 import { Icon } from '@/components/ui/icon'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Text } from '@/components/ui/text'
+import { useChannelScreenData } from '@/hooks/useChannelScreenData'
 import { trpc } from '@/utils/api'
 import { Badge } from './ui/badge'
 import { Card, CardFooter, CardHeader, CardTitle } from './ui/card'
@@ -20,8 +22,12 @@ export function StudyMaterialsList({
   ListHeaderComponent,
 }: {
   ListHeaderComponent?: ReactElement
-}) {
-  const { chapterId } = useLocalSearchParams() as { chapterId: string }
+} = {}) {
+  const { channelId, chapterId } = useLocalSearchParams() as {
+    channelId: string
+    chapterId: string
+  }
+  const { chaptersQuery } = useChannelScreenData(channelId)
   const materialsQuery = useQuery(
     trpc.lms.studyMaterial.listPublicByChapterId.queryOptions({ chapterId }),
   )
@@ -31,8 +37,16 @@ export function StudyMaterialsList({
   return (
     <FlashList
       data={materials}
+      style={{ flex: 1 }}
       showsVerticalScrollIndicator={false}
-      ListHeaderComponent={ListHeaderComponent}
+      ListHeaderComponent={
+        <>
+          {ListHeaderComponent}
+          <View className="px-4 py-3">
+            <ChapterButton chaptersQuery={chaptersQuery} />
+          </View>
+        </>
+      }
       refreshControl={
         <RefreshControl
           onRefresh={() => materialsQuery.refetch()}
