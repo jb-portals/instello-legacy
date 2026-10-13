@@ -4,6 +4,7 @@ import { z } from 'zod/v4'
 
 import { initialColumns } from '../columns.helpers'
 import { lmsPgTable } from '../table.helpers'
+import { channel } from './channel'
 
 export const studyGroupMemberRoles = ['owner', 'member'] as const
 
@@ -29,12 +30,17 @@ const titleSchema = z
   .min(1, 'Title is required')
   .max(255, 'Title is too long')
 
-export const studyGroup = lmsPgTable('study_group', (d) => ({
-  ...initialColumns,
-  createdByClerkUserId: d.text().notNull(),
-  name: d.varchar({ length: 255 }).notNull(),
-  note: d.text().notNull().default(''),
-}))
+export const studyGroup = lmsPgTable(
+  'study_group',
+  (d) => ({
+    ...initialColumns,
+    createdByClerkUserId: d.text().notNull(),
+    name: d.varchar({ length: 255 }).notNull(),
+    note: d.text().notNull().default(''),
+    channelId: d.text().references(() => channel.id, { onDelete: 'set null' }),
+  }),
+  (t) => [index().on(t.channelId)],
+)
 
 export const studyGroupMember = lmsPgTable(
   'study_group_member',
@@ -128,7 +134,8 @@ export const studyGroupTask = lmsPgTable(
       .references(() => studyGroup.id, { onDelete: 'cascade' }),
     planId: d
       .text()
-      .references(() => studyGroupPlan.id, { onDelete: 'set null' }),
+      .notNull()
+      .references(() => studyGroupPlan.id, { onDelete: 'cascade' }),
     createdByClerkUserId: d.text().notNull(),
     title: d.varchar({ length: 255 }).notNull(),
     scope: d.text({ enum: studyGroupTaskScopes }).notNull(),
@@ -147,7 +154,11 @@ export const studyGroupTask = lmsPgTable(
   ],
 )
 
-export const studyGroupRelations = relations(studyGroup, ({ many }) => ({
+export const studyGroupRelations = relations(studyGroup, ({ one, many }) => ({
+  channel: one(channel, {
+    fields: [studyGroup.channelId],
+    references: [channel.id],
+  }),
   members: many(studyGroupMember),
   plans: many(studyGroupPlan),
   sessions: many(studyGroupSession),
@@ -264,10 +275,15 @@ export const StudyGroupSessionIdSchema = z.object({
   sessionId: z.string().min(1, 'Session is required'),
 })
 
+export const SetStudyGroupChannelSchema = z.object({
+  groupId: z.string().min(1, 'Group is required'),
+  channelId: z.string().min(1).nullable(),
+})
+
 export const CreateStudyGroupTaskSchema = z
   .object({
     groupId: z.string().min(1, 'Group is required'),
-    planId: z.string().min(1).optional(),
+    planId: z.string().min(1, 'Plan is required'),
     title: titleSchema,
     scope: z.enum(studyGroupTaskScopes),
     assigneeClerkUserId: z.string().min(1).optional(),

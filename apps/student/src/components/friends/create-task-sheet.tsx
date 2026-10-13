@@ -10,14 +10,14 @@ import { displayName } from '@/lib/friends'
 
 export function CreateTaskSheet({
   visible,
-  plans,
+  planId,
   members,
   saving = false,
   onDismiss,
   onSubmit,
 }: {
   visible: boolean
-  plans: { id: string; name: string }[]
+  planId: string
   members: {
     clerkUserId: string
     profile: {
@@ -33,13 +33,12 @@ export function CreateTaskSheet({
     title: string
     scope: 'common' | 'individual'
     assigneeClerkUserId?: string
-    planId?: string
+    planId: string
   }) => void
 }) {
   const [title, setTitle] = useState('')
   const [scope, setScope] = useState<'common' | 'individual'>('common')
   const [assigneeId, setAssigneeId] = useState(members[0]?.clerkUserId ?? '')
-  const [planId, setPlanId] = useState('none')
 
   useEffect(() => {
     if (visible) {
@@ -49,14 +48,7 @@ export function CreateTaskSheet({
     setTitle('')
     setScope('common')
     setAssigneeId(members[0]?.clerkUserId ?? '')
-    setPlanId('none')
   }, [visible, members])
-
-  const activeMembers = members
-  const planOptions = [
-    { value: 'none', label: 'No plan' },
-    ...plans.map((plan) => ({ value: plan.id, label: plan.name })),
-  ]
 
   return (
     <PlannerSheet
@@ -65,7 +57,7 @@ export function CreateTaskSheet({
         if (!saving) onDismiss()
       }}
       title="New task"
-      snapPoints={['88%']}
+      snapPoints={['72%']}
     >
       <View className="gap-4">
         <View className="gap-1.5">
@@ -92,7 +84,7 @@ export function CreateTaskSheet({
             <Label>Assign to</Label>
             <ChoiceChips
               value={assigneeId}
-              options={activeMembers.map((member) => ({
+              options={members.map((member) => ({
                 value: member.clerkUserId,
                 label: displayName(member.profile),
               }))}
@@ -100,20 +92,11 @@ export function CreateTaskSheet({
             />
           </View>
         ) : null}
-        {plans.length > 0 ? (
-          <View className="gap-1.5">
-            <Label>Shared plan</Label>
-            <ChoiceChips
-              value={planId}
-              options={planOptions}
-              onChange={setPlanId}
-            />
-          </View>
-        ) : null}
         <Button
           disabled={
             title.trim().length === 0 ||
             saving ||
+            planId.length === 0 ||
             (scope === 'individual' && assigneeId.length === 0)
           }
           onPress={() =>
@@ -122,7 +105,7 @@ export function CreateTaskSheet({
               scope,
               assigneeClerkUserId:
                 scope === 'individual' ? assigneeId : undefined,
-              planId: planId === 'none' ? undefined : planId,
+              planId,
             })
           }
         >

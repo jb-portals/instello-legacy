@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import {
   ActivityIndicator,
+  Pressable,
   RefreshControl,
   ScrollView,
   View,
@@ -15,8 +16,9 @@ import {
   groupAlert,
   useStudyGroup,
 } from '@/components/friends/use-study-group'
+import { PlannerSheet } from '@/components/planner/planner-sheet'
 import { Button } from '@/components/ui/button'
-import { Card, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
 import { displayName, invalidateGroup } from '@/lib/friends'
 import { trpc } from '@/utils/api'
@@ -38,7 +40,8 @@ export function GroupPlans() {
   const [renamingPlan, setRenamingPlan] = useState<
     ActiveGroup['plans'][number] | null
   >(null)
-  const [creatingTask, setCreatingTask] = useState(false)
+  const [taskPlanId, setTaskPlanId] = useState<string | null>(null)
+  const [pickingChannel, setPickingChannel] = useState(false)
 
   const createPlan = useMutation(
     trpc.lms.studyGroup.plan.create.mutationOptions({
@@ -61,10 +64,19 @@ export function GroupPlans() {
   const createTask = useMutation(
     trpc.lms.studyGroup.task.create.mutationOptions({
       async onSuccess() {
-        setCreatingTask(false)
+        setTaskPlanId(null)
         await invalidateGroup(queryClient)
       },
       onError: groupAlert('Unable to create task'),
+    }),
+  )
+  const setChannel = useMutation(
+    trpc.lms.studyGroup.setChannel.mutationOptions({
+      async onSuccess() {
+        setPickingChannel(false)
+        await invalidateGroup(queryClient)
+      },
+      onError: groupAlert('Unable to update channel'),
     }),
   )
   const setTaskStatus = useMutation(
@@ -85,17 +97,9 @@ export function GroupPlans() {
   const activeMembers = data.members.filter(
     (member) => member.status === 'active',
   )
-  const commonTasks = data.tasks.filter((task) => task.scope === 'common')
-  const individualTasks = [
-    ...data.tasks.filter((task) => task.scope === 'individual'),
-  ].sort((a, b) => {
-    const aMine = a.assigneeClerkUserId === user?.id ? 0 : 1
-    const bMine = b.assigneeClerkUserId === user?.id ? 0 : 1
-    return aMine - bMine
-  })
   const progress = progressQuery.data
   const plansEmpty = data.plans.length === 0
-  const tasksEmpty = data.tasks.length === 0
+  const channelTitle = data.group.channel?.title ?? 'No channel selected'
 
   return (
     <View className="bg-background flex-1">
@@ -112,6 +116,24 @@ export function GroupPlans() {
           />
         }
       >
+        <View className="gap-2">
+          <View className="flex-row items-center justify-between">
+            <Text variant="small">Channel</Text>
+            <Button
+              size="sm"
+              variant="outline"
+              onPress={() => setPickingChannel(true)}
+            >
+              <Text>{data.group.channel ? 'Change' : 'Select'}</Text>
+            </Button>
+          </View>
+          <Card className="py-4">
+            <CardHeader>
+              <CardTitle>{channelTitle}</CardTitle>
+            </CardHeader>
+          </Card>
+        </View>
+
         <View className="gap-2">
           <Text variant="small">Progress</Text>
           {progressQuery.isPending ? (
@@ -160,91 +182,65 @@ export function GroupPlans() {
               }
             />
           ) : (
-            data.plans.map((plan) => (
-              <Card key={plan.id} className="gap-2 py-4">
-                <CardHeader className="gap-1">
-                  <CardTitle>{plan.name}</CardTitle>
-                  {plan.note ? <Text variant="muted">{plan.note}</Text> : null}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="mt-2 self-start"
-                    onPress={() => setRenamingPlan(plan)}
-                  >
-                    <Text>Rename</Text>
-                  </Button>
-                </CardHeader>
-              </Card>
-            ))
-          )}
-        </View>
-
-        <View className="gap-2">
-          <View className="flex-row items-center justify-between">
-            <Text variant="small">Tasks</Text>
-            {tasksEmpty ? null : (
-              <Button
-                size="sm"
-                variant="outline"
-                onPress={() => setCreatingTask(true)}
-              >
-                <Text>New task</Text>
-              </Button>
-            )}
-          </View>
-          {tasksEmpty ? (
-            <GroupEmpty
-              title="No tasks yet"
-              description="Add a common task for everyone, or one for a single member."
-              action={
-                <Button onPress={() => setCreatingTask(true)}>
-                  <Text>New task</Text>
-                </Button>
-              }
-            />
-          ) : (
-            <>
-              <Text variant="small">Common</Text>
-              {commonTasks.length === 0 ? (
-                <Text variant="muted">No common tasks.</Text>
-              ) : (
-                commonTasks.map((task) => (
-                  <TaskRow
-                    key={task.id}
-                    task={task}
-                    mine
-                    pending={setTaskStatus.isPending}
-                    onToggle={() =>
-                      setTaskStatus.mutate({
-                        taskId: task.id,
-                        status: task.status === 'done' ? 'open' : 'done',
-                      })
-                    }
-                  />
-                ))
-              )}
-              <Text variant="small" className="mt-2">
-                Individual
-              </Text>
-              {individualTasks.length === 0 ? (
-                <Text variant="muted">No individual tasks.</Text>
-              ) : (
-                individualTasks.map((task) => (
-                  <TaskRow
-                    key={task.id}
-                    task={task}
-                    mine={task.assigneeClerkUserId === user?.id}
-                    pending={setTaskStatus.isPending}
-                    onToggle={() =>
-                      setTaskStatus.mutate({
-                        taskId: task.id,
-                        status: task.status === 'done' ? 'open' : 'done',
-                      })
-                    }
-                  />
-                ))
-              )}
-            </>
+            data.plans.map((plan) => {
+              const planTasks = data.tasks
+                .filter((task) => task.planId === plan.id)
+                .sort((a, b) => {
+                  const aMine = a.assigneeClerkUserId === user?.id ? 0 : 1
+                  const bMine = b.assigneeClerkUserId === user?.id ? 0 : 1
+                  return aMine - bMine
+                })
+              return (
+                <Card key={plan.id} className="gap-3 py-4">
+                  <CardHeader className="gap-1">
+                    <View className="flex-row items-start justify-between gap-2">
+                      <CardTitle className="flex-1">{plan.name}</CardTitle>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onPress={() => setTaskPlanId(plan.id)}
+                      >
+                        <Text>New task</Text>
+                      </Button>
+                    </View>
+                    {plan.note ? (
+                      <Text variant="muted">{plan.note}</Text>
+                    ) : null}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="mt-2 self-start"
+                      onPress={() => setRenamingPlan(plan)}
+                    >
+                      <Text>Rename</Text>
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="gap-2">
+                    {planTasks.length === 0 ? (
+                      <Text variant="muted">No tasks yet.</Text>
+                    ) : (
+                      planTasks.map((task) => (
+                        <TaskRow
+                          key={task.id}
+                          task={task}
+                          mine={
+                            task.scope === 'common' ||
+                            task.assigneeClerkUserId === user?.id
+                          }
+                          pending={setTaskStatus.isPending}
+                          onToggle={() =>
+                            setTaskStatus.mutate({
+                              taskId: task.id,
+                              status: task.status === 'done' ? 'open' : 'done',
+                            })
+                          }
+                        />
+                      ))
+                    )}
+                  </CardContent>
+                </Card>
+              )
+            })
           )}
         </View>
       </ScrollView>
@@ -281,11 +277,11 @@ export function GroupPlans() {
         }}
       />
       <CreateTaskSheet
-        visible={creatingTask}
-        plans={data.plans.map((plan) => ({ id: plan.id, name: plan.name }))}
+        visible={taskPlanId !== null}
+        planId={taskPlanId ?? ''}
         members={activeMembers}
         saving={createTask.isPending}
-        onDismiss={() => setCreatingTask(false)}
+        onDismiss={() => setTaskPlanId(null)}
         onSubmit={(input) =>
           createTask.mutate({
             groupId,
@@ -295,6 +291,16 @@ export function GroupPlans() {
             planId: input.planId,
           })
         }
+      />
+      <ChannelSheet
+        visible={pickingChannel}
+        groupId={groupId}
+        selectedId={data.group.channel?.id ?? null}
+        saving={setChannel.isPending}
+        onDismiss={() => {
+          if (!setChannel.isPending) setPickingChannel(false)
+        }}
+        onSelect={(channelId) => setChannel.mutate({ groupId, channelId })}
       />
     </View>
   )
@@ -333,5 +339,79 @@ function TaskRow({
         <Text variant="muted">{task.status === 'done' ? 'Done' : 'Open'}</Text>
       )}
     </View>
+  )
+}
+
+function ChannelSheet({
+  visible,
+  groupId,
+  selectedId,
+  saving,
+  onDismiss,
+  onSelect,
+}: {
+  visible: boolean
+  groupId: string
+  selectedId: string | null
+  saving: boolean
+  onDismiss: () => void
+  onSelect: (channelId: string | null) => void
+}) {
+  const channelsQuery = useQuery(
+    trpc.lms.studyGroup.selectableChannels.queryOptions(
+      { groupId },
+      { enabled: visible && groupId.length > 0 },
+    ),
+  )
+  const channels = channelsQuery.data ?? []
+
+  return (
+    <PlannerSheet
+      visible={visible}
+      onDismiss={onDismiss}
+      title="Study channel"
+      snapPoints={['72%']}
+    >
+      <View className="gap-3">
+        {channelsQuery.isPending ? (
+          <ActivityIndicator />
+        ) : channelsQuery.isError ? (
+          <Text variant="muted">Unable to load channels.</Text>
+        ) : channels.length === 0 ? (
+          <Text variant="muted">
+            Subscribe to a channel to study it with this group.
+          </Text>
+        ) : (
+          channels.map((item) => {
+            const selected = item.id === selectedId
+            return (
+              <Pressable
+                key={item.id}
+                accessibilityRole="button"
+                disabled={saving}
+                onPress={() => onSelect(item.id)}
+                className={
+                  selected
+                    ? 'border-primary rounded-xl border px-3 py-3'
+                    : 'border-border rounded-xl border px-3 py-3'
+                }
+              >
+                <Text>{item.title}</Text>
+                {selected ? <Text variant="muted">Selected</Text> : null}
+              </Pressable>
+            )
+          })
+        )}
+        {selectedId ? (
+          <Button
+            variant="outline"
+            disabled={saving}
+            onPress={() => onSelect(null)}
+          >
+            <Text>Clear channel</Text>
+          </Button>
+        ) : null}
+      </View>
+    </PlannerSheet>
   )
 }

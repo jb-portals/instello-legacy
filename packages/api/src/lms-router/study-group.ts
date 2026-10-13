@@ -1,6 +1,7 @@
 import {
   and,
   eq,
+  gt,
   gte,
   inArray,
   isDrizzleQueryError,
@@ -8,6 +9,7 @@ import {
   ne,
 } from '@instello/db'
 import {
+  channel,
   CreateStudyGroupPlanSchema,
   CreateStudyGroupSchema,
   CreateStudyGroupSessionSchema,
@@ -16,6 +18,7 @@ import {
   InviteStudyGroupMemberSchema,
   RemoveStudyGroupMemberSchema,
   RenameStudyGroupPlanSchema,
+  SetStudyGroupChannelSchema,
   SetStudyGroupTaskStatusSchema,
   StudyGroupIdSchema,
   StudyGroupSessionIdSchema,
@@ -25,6 +28,7 @@ import {
   studyGroupSession,
   studyGroupSessionParticipant,
   studyGroupTask,
+  subscription,
 } from '@instello/db/lms'
 import { TRPCError } from '@trpc/server'
 
@@ -128,9 +132,8 @@ function requireOwner(membership: Membership) {
 async function requirePlanInGroup(
   db: Database,
   groupId: string,
-  planId: string | undefined,
+  planId: string,
 ) {
-  if (!planId) return
   const plan = await db.query.studyGroupPlan.findFirst({
     where: and(
       eq(studyGroupPlan.id, planId),
@@ -146,10 +149,17 @@ async function requirePlanInGroup(
   }
 }
 
+function mapChannel(
+  selected: { id: string; title: string } | null | undefined,
+) {
+  return selected ? { id: selected.id, title: selected.title } : null
+}
+
 async function loadGroup(db: Database, groupId: string) {
   return db.query.studyGroup.findFirst({
     where: eq(studyGroup.id, groupId),
     with: {
+      channel: { columns: { id: true, title: true } },
       members: true,
       plans: {
         orderBy: (table, { desc: byDesc }) => [byDesc(table.createdAt)],
@@ -321,6 +331,7 @@ export const studyGroupRouter = {
       ctx.db.query.studyGroup.findMany({
         where: inArray(studyGroup.id, groupIds),
         orderBy: (table, { desc: byDesc }) => [byDesc(table.createdAt)],
+        with: { channel: { columns: { id: true, title: true } } },
       }),
       ctx.db.query.studyGroupMember.findMany({
         where: inArray(studyGroupMember.groupId, groupIds),
@@ -352,6 +363,7 @@ export const studyGroupRouter = {
         id: group.id,
         name: group.name,
         note: group.note,
+        channel: mapChannel(group.channel),
         myRole: membership?.role ?? 'member',
         myStatus: membership?.status ?? 'invited',
         memberCount: members.filter(
@@ -395,7 +407,12 @@ export const studyGroupRouter = {
         )
         return {
           access: 'invited' as const,
-          group: { id: group.id, name: group.name, note: group.note },
+          group: {
+            id: group.id,
+            name: group.name,
+            note: group.note,
+            channel: mapChannel(group.channel),
+          },
           invitedBy: inviterId ? profileOrFallback(profiles, inviterId) : null,
         }
       }
@@ -418,6 +435,7 @@ export const studyGroupRouter = {
           name: group.name,
           note: group.note,
           createdByClerkUserId: group.createdByClerkUserId,
+          channel: mapChannel(group.channel),
         },
         myRole: membership.role,
         members: group.members.map((member) => ({
@@ -432,6 +450,70 @@ export const studyGroupRouter = {
         ),
         tasks: group.tasks.map((task) => mapTask(task, profiles)),
       }
+    }),
+
+  setChannel: protectedProcedure
+    .input(SetStudyGroupChannelSchema)
+    .mutation(async ({ ctx, input }) => {
+      await requireActiveMember(ctx.db, ctx.auth.userId, input.groupId)
+
+      if (input.channelId) {
+        const selected = await ctx.db.query.channel.findFirst({
+          where: eq(channel.id, input.channelId),
+          columns: { id: true },
+        })
+        if (!selected) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'That channel does not exist',
+          })
+        }
+      }
+
+      await ctx.db
+        .update(studyGroup)
+        .set({ channelId: input.channelId, updatedAt: new Date() })
+        .where(eq(studyGroup.id, input.groupId))
+
+      return { channelId: input.channelId }
+    }),
+
+  selectableChannels: protectedProcedure
+    .input(StudyGroupIdSchema)
+    .query(async ({ ctx, input }) => {
+      await requireActiveMember(ctx.db, ctx.auth.userId, input.groupId)
+      const [group, subscriptions] = await Promise.all([
+        ctx.db.query.studyGroup.findFirst({
+          where: eq(studyGroup.id, input.groupId),
+          with: { channel: { columns: { id: true, title: true } } },
+        }),
+        ctx.db.query.subscription.findMany({
+          where: and(
+            eq(subscription.clerkUserId, ctx.auth.userId),
+            gt(subscription.endDate, new Date()),
+          ),
+          with: { channel: { columns: { id: true, title: true } } },
+        }),
+      ])
+
+      const channels = new Map<string, { id: string; title: string }>()
+      for (const row of subscriptions) {
+        if (!row.channel) continue
+        channels.set(row.channel.id, {
+          id: row.channel.id,
+          title: row.channel.title,
+        })
+      }
+      if (group?.channel) {
+        channels.set(group.channel.id, {
+          id: group.channel.id,
+          title: group.channel.title,
+        })
+      }
+
+      return [...channels.values()].sort((a, b) =>
+        a.title.localeCompare(b.title),
+      )
     }),
 
   delete: protectedProcedure
@@ -709,7 +791,9 @@ export const studyGroupRouter = {
       .input(CreateStudyGroupSessionSchema)
       .mutation(async ({ ctx, input }) => {
         await requireActiveMember(ctx.db, ctx.auth.userId, input.groupId)
-        await requirePlanInGroup(ctx.db, input.groupId, input.planId)
+        if (input.planId) {
+          await requirePlanInGroup(ctx.db, input.groupId, input.planId)
+        }
 
         const [session] = await ctx.db
           .insert(studyGroupSession)

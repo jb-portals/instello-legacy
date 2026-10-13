@@ -290,6 +290,7 @@ function GroupLink({ group }: { group: GroupCard }) {
     : 'No upcoming session'
   const meta = [
     group.myStatus === 'invited' ? 'Invited' : null,
+    group.channel?.title ?? null,
     members,
     session,
   ]
