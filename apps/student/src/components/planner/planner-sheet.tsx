@@ -24,27 +24,25 @@ export function PlannerSheet({
   children: ReactNode
 }) {
   const ref = useRef<BottomSheetModal>(null)
-  const visibleRef = useRef(visible)
+  // dismiss() on a modal that was never presented sticks gorhom in
+  // DISMISSING, and the portal then refuses to render the next present().
+  const opened = useRef(false)
   const scheme = useColorScheme()
   const colors = THEME[scheme ?? 'light']
 
   useEffect(() => {
-    visibleRef.current = visible
-    if (!visible) {
-      ref.current?.dismiss()
+    if (visible) {
+      opened.current = true
+      ref.current?.present()
       return
     }
-
-    ref.current?.present()
-    // present() is ignored while a previous close is still running.
-    const retry = setTimeout(() => {
-      if (visibleRef.current) ref.current?.present()
-    }, 300)
-    return () => clearTimeout(retry)
+    if (!opened.current) return
+    opened.current = false
+    ref.current?.dismiss()
   }, [visible])
 
   const handleDismiss = useCallback(() => {
-    visibleRef.current = false
+    opened.current = false
     onDismiss()
   }, [onDismiss])
 
